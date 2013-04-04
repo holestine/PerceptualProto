@@ -11,7 +11,8 @@ namespace Lorenz
    /// </summary>
    public partial class MainWindow
    {
-      private const double DEFAULT_BRUSH_OPACITY = 0.9;            // Default brush opacity    
+      private const double DEFAULT_BRUSH_OPACITY = 0.9;
+      private const double SQRT3 = 1.73205080757f;
       private GeometryModel3D m_GeometryModel;
       private Model3DGroup m_Model3DGroup;
       private ModelVisual3D m_ModelVisual3D;
@@ -35,7 +36,7 @@ namespace Lorenz
          // of the camera.
          var myPCamera = new PerspectiveCamera
          {
-            Position = new Point3D(0, 0, -20),
+            Position = new Point3D(0, 2, -20),
             LookDirection = new Vector3D(0, 0, 1),
             FieldOfView = 90
          };
@@ -68,7 +69,11 @@ namespace Lorenz
          geometry.Positions.Add(p1);
          geometry.Positions.Add(p2);
 
+
          // Adding triangle indices
+         geometry.TriangleIndices.Add(2);
+         geometry.TriangleIndices.Add(1);
+         geometry.TriangleIndices.Add(0);
          geometry.TriangleIndices.Add(0);
          geometry.TriangleIndices.Add(1);
          geometry.TriangleIndices.Add(2);
@@ -78,24 +83,12 @@ namespace Lorenz
          geometry.Normals.Add(normal);
          geometry.Normals.Add(normal);
          geometry.Normals.Add(normal);
-
-
-         // Adding Positions
-         geometry.Positions.Add(p2);
-         geometry.Positions.Add(p1);
-         geometry.Positions.Add(p0);
-
-         // Adding triangle indices
-         geometry.TriangleIndices.Add(2);
-         geometry.TriangleIndices.Add(1);
-         geometry.TriangleIndices.Add(0);
-
-         // Adding normals
+         
          normal = CalculateNormal(p2, p1, p0);
          geometry.Normals.Add(normal);
          geometry.Normals.Add(normal);
          geometry.Normals.Add(normal);
-
+         
          // At last brush.
          var materialGroup = new MaterialGroup();
 
@@ -125,10 +118,16 @@ namespace Lorenz
 
 
 
-      private GeometryModel3D DrawPyramid(Point3D p0, Point3D p1, Point3D p2, Point3D p3,
+      private GeometryModel3D DrawPyramid(Point3D center,
                                     Color color, double opacity)
       {
          var geometry = new MeshGeometry3D();
+         Vector3D normal;
+
+         var p0 = new Point3D(center.X, center.Y, center.Z - 0.5);
+         var p1 = new Point3D(center.X, center.Y + 1.0, center.Z);
+         var p2 = new Point3D(center.X - 0.5, center.Y, center.Z - 0.5);
+         var p3 = new Point3D(center.X + 0.5, center.Y, center.Z - 0.5);
 
          // Vertices for pyramid
          geometry.Positions.Add(p0);
@@ -136,59 +135,135 @@ namespace Lorenz
          geometry.Positions.Add(p2);
          geometry.Positions.Add(p3);
 
-         // Side 1
-         geometry.TriangleIndices.Add(0);
-         geometry.TriangleIndices.Add(1);
-         geometry.TriangleIndices.Add(2);
-
-         // Side 2
          geometry.TriangleIndices.Add(2);
          geometry.TriangleIndices.Add(1);
          geometry.TriangleIndices.Add(3);
-
-         // Side 3 
+         geometry.TriangleIndices.Add(3);
+         geometry.TriangleIndices.Add(1);
+         geometry.TriangleIndices.Add(2);
+         geometry.TriangleIndices.Add(0);
+         geometry.TriangleIndices.Add(1);
+         geometry.TriangleIndices.Add(2);
+         geometry.TriangleIndices.Add(2);
+         geometry.TriangleIndices.Add(1);
+         geometry.TriangleIndices.Add(0);
          geometry.TriangleIndices.Add(3);
          geometry.TriangleIndices.Add(1);
          geometry.TriangleIndices.Add(0);
-
-         // Side 4
+         geometry.TriangleIndices.Add(0);
+         geometry.TriangleIndices.Add(1);
+         geometry.TriangleIndices.Add(3);
          geometry.TriangleIndices.Add(0);
          geometry.TriangleIndices.Add(2);
          geometry.TriangleIndices.Add(3);
+         geometry.TriangleIndices.Add(3);
+         geometry.TriangleIndices.Add(2);
+         geometry.TriangleIndices.Add(0);
 
-         // Adding normals
-         Vector3D normal = CalculateNormal(p0, p1, p2);
+         // Front
+         normal = CalculateNormal(p3, p1, p2);
          geometry.Normals.Add(normal);
          geometry.Normals.Add(normal);
          geometry.Normals.Add(normal);
-
          normal = CalculateNormal(p2, p1, p3);
          geometry.Normals.Add(normal);
          geometry.Normals.Add(normal);
          geometry.Normals.Add(normal);
 
+         // Left
+         normal = CalculateNormal(p2, p1, p0);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+         normal = CalculateNormal(p0, p1, p2);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+
+         // Right
+         normal = CalculateNormal(p0, p1, p3);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
          normal = CalculateNormal(p3, p1, p0);
          geometry.Normals.Add(normal);
          geometry.Normals.Add(normal);
          geometry.Normals.Add(normal);
 
+         // Bottom
+         normal = CalculateNormal(p3, p2, p0);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
          normal = CalculateNormal(p0, p2, p3);
          geometry.Normals.Add(normal);
          geometry.Normals.Add(normal);
          geometry.Normals.Add(normal);
-         /*
-         // Adding Positions
-         geometry.Positions.Add(p2);
-         geometry.Positions.Add(p1);
-         geometry.Positions.Add(p0);
 
-         // Adding triangle indices
+
+         /*
+         // Front
+         geometry.TriangleIndices.Add(2);
+         geometry.TriangleIndices.Add(1);
+         geometry.TriangleIndices.Add(3);
+         normal = CalculateNormal(p3, p1, p2);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+
+         geometry.TriangleIndices.Add(3);
+         geometry.TriangleIndices.Add(1);
+         geometry.TriangleIndices.Add(2);
+         normal = CalculateNormal(p2, p1, p3);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+         
+         // Left
+         geometry.TriangleIndices.Add(0);
+         geometry.TriangleIndices.Add(1);
+         geometry.TriangleIndices.Add(2);
+         normal = CalculateNormal(p2, p1, p0);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);   
+      
          geometry.TriangleIndices.Add(2);
          geometry.TriangleIndices.Add(1);
          geometry.TriangleIndices.Add(0);
+         normal = CalculateNormal(p0, p1, p2);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+         
+         // Right
+         geometry.TriangleIndices.Add(3);
+         geometry.TriangleIndices.Add(1);
+         geometry.TriangleIndices.Add(0);
+         normal = CalculateNormal(p0, p1, p3);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);         
+         geometry.TriangleIndices.Add(0);
+         geometry.TriangleIndices.Add(1);
+         geometry.TriangleIndices.Add(3);
+         normal = CalculateNormal(p3, p1, p0);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
 
-         // Adding normals
-         normal = CalculateNormal(p2, p1, p0);
+         // Bottom
+         geometry.TriangleIndices.Add(0);
+         geometry.TriangleIndices.Add(2);
+         geometry.TriangleIndices.Add(3);
+         normal = CalculateNormal(p3, p2, p0);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);
+         geometry.Normals.Add(normal);         
+         geometry.TriangleIndices.Add(3);
+         geometry.TriangleIndices.Add(2);
+         geometry.TriangleIndices.Add(0);
+         normal = CalculateNormal(p0, p2, p3);
          geometry.Normals.Add(normal);
          geometry.Normals.Add(normal);
          geometry.Normals.Add(normal);
@@ -208,18 +283,13 @@ namespace Lorenz
 
       private void OnMouseEnter(object sender, MouseEventArgs e)
       {
-         var pyramidColor = Color.FromRgb(0xFF, 0xF0, 0x00);
-         m_GeometryModel = DrawPyramid(
-         new Point3D(0, 0, 0),
-         new Point3D(10, 0, 0),
-         new Point3D(10, 10, 0),
-         new Point3D(10, 10, 10),
-         pyramidColor,
-         0.9);
+         m_Model3DGroup.Children.Remove(m_GeometryModel);
 
-         m_Angle += 10;
+         var pyramidColor = Color.FromRgb(0x0F, 0xF0, 0x00);
+         m_GeometryModel = DrawPyramid(new Point3D(0, 0, 0), pyramidColor, DEFAULT_BRUSH_OPACITY);
+
          var myRotateTransform3D = new RotateTransform3D();
-         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = m_Angle };
+         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = m_Angle += 10 };
          myRotateTransform3D.Rotation = myAxisAngleRotation3D;
          m_GeometryModel.Transform = myRotateTransform3D;
 
@@ -230,6 +300,7 @@ namespace Lorenz
          //m_ModelVisual3D.Content = m_Model3DGroup;
          var model = new ModelVisual3D();
          model.Content = m_Model3DGroup;
+         
          m_Viewport3D.Children.Add(model);
 
          x_page.Content = m_Viewport3D;
@@ -245,7 +316,7 @@ namespace Lorenz
 
          m_Angle += 10;
          var myRotateTransform3D = new RotateTransform3D();
-         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(1, 0, 1), Angle = m_Angle };
+         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = m_Angle };
          myRotateTransform3D.Rotation = myAxisAngleRotation3D;
          m_GeometryModel.Transform = myRotateTransform3D;
 
@@ -254,14 +325,15 @@ namespace Lorenz
 
       private void OnLoaded(object sender, RoutedEventArgs e)
       {
+         createCube();
+         
          var pyramidColor = Color.FromRgb(0xFF, 0xF0, 0x00);
-         m_GeometryModel = DrawPyramid(
-         new Point3D(0, 0, 0),
-         new Point3D(10, 0, 0),
-         new Point3D(10, 10, 0),
-         new Point3D(10, 10, 10),
+         m_GeometryModel = DrawTriangle(
+         new Point3D(5, 0, 1),
+         new Point3D(10, 0, 1),
+         new Point3D(5, 5, 1),
          pyramidColor,
-         0.9);
+         DEFAULT_BRUSH_OPACITY);
 
          // Add the geometry model to the model group.
          m_Model3DGroup.Children.Add(m_GeometryModel);
@@ -275,7 +347,77 @@ namespace Lorenz
          m_Viewport3D.MouseEnter += OnMouseEnter;
 
          x_page.Content = m_Viewport3D;
+         
       }
 
+      private Point3D p0 = new Point3D(0, 0, 0);
+      private Point3D p1 = new Point3D(2, 0, 0);
+      private Point3D p2 = new Point3D(2, 0, 2);
+      private Point3D p3 = new Point3D(0, 0, 2);
+      private Point3D p4 = new Point3D(0, 2, 0);
+      private Point3D p5 = new Point3D(2, 2, 0);
+      private Point3D p6 = new Point3D(2, 2, 2);
+      private Point3D p7 = new Point3D(0, 2, 2);
+
+      private void createCube()
+      {
+         Model3DGroup cube = new Model3DGroup();
+
+         //front side triangles
+         cube.Children.Add(CreateTriangleModel(ref p3, ref p2, ref p6));
+         cube.Children.Add(CreateTriangleModel(ref p3, ref p6, ref p7));
+         //right side triangles
+         cube.Children.Add(CreateTriangleModel(ref p2, ref p1, ref p5));
+         cube.Children.Add(CreateTriangleModel(ref p2, ref p5, ref p6));
+         //back side triangles
+         cube.Children.Add(CreateTriangleModel(ref p1, ref p0, ref p4));
+         cube.Children.Add(CreateTriangleModel(ref p1, ref p4, ref p5));
+         //left side triangles
+         cube.Children.Add(CreateTriangleModel(ref p0, ref p3, ref p7));
+         cube.Children.Add(CreateTriangleModel(ref p0, ref p7, ref p4));
+         //top side triangles
+         cube.Children.Add(CreateTriangleModel(ref p7, ref p6, ref p5));
+         cube.Children.Add(CreateTriangleModel(ref p7, ref p5, ref p4));
+         //bottom side triangles
+         cube.Children.Add(CreateTriangleModel(ref p2, ref p3, ref p0));
+         cube.Children.Add(CreateTriangleModel(ref p2, ref p0, ref p1));
+
+         ModelVisual3D model = new ModelVisual3D();
+         model.Content = cube;
+
+         m_Viewport3D.Children.Add(model);
+      }
+
+
+      private Model3DGroup CreateTriangleModel(ref Point3D p0, ref Point3D p1, ref Point3D p2)
+      {
+         MeshGeometry3D mesh = new MeshGeometry3D();
+         mesh.Positions.Add(p0);
+         mesh.Positions.Add(p1);
+         mesh.Positions.Add(p2);
+         mesh.TriangleIndices.Add(0);
+         mesh.TriangleIndices.Add(1);
+         mesh.TriangleIndices.Add(2);
+         Vector3D normal = CalculateNormal(ref p0, ref p1, ref p2);
+         mesh.Normals.Add(normal);
+         mesh.Normals.Add(normal);
+         mesh.Normals.Add(normal);
+         Material material = new DiffuseMaterial(
+           new SolidColorBrush(Colors.DarkKhaki));
+         GeometryModel3D model = new GeometryModel3D(mesh, material);
+         Model3DGroup group = new Model3DGroup();
+         group.Children.Add(model);
+
+         return group;
+      }
+
+      private Vector3D CalculateNormal(ref Point3D p0, ref Point3D p1, ref Point3D p2)
+      {
+         Vector3D v0 = new Vector3D(
+           p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);
+         Vector3D v1 = new Vector3D(
+           p2.X - p1.X, p2.Y - p1.Y, p2.Z - p1.Z);
+         return Vector3D.CrossProduct(v0, v1);
+      }
    }
 }
