@@ -63,86 +63,98 @@ namespace Lorenz
             };
             m_Model3DGroup.Children.Add(light);
 
-           // Wire gesture handler
-            PXCMSession session;
-            pxcmStatus sts = PXCMSession.CreateInstance(out session);
-            if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
-            {
-               Console.WriteLine("Failed to create the SDK session");
-               return;
-            }
+           var ambientLight = new AmbientLight()
+              {
+                 Color = Colors.CornflowerBlue
+              };
+           m_Model3DGroup.Children.Add(ambientLight);
 
-            // Gesture Module
-            PXCMBase gesture_t;
-            sts = session.CreateImpl(PXCMGesture.CUID, out gesture_t);
-            if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
-            {
-               Console.WriteLine("Failed to load any gesture recognition module");
-               session.Dispose();
-               return;
-            }
-            PXCMGesture gesture = (PXCMGesture)gesture_t;
-
-            PXCMGesture.ProfileInfo pinfo;
-            sts = gesture.QueryProfile(0, out pinfo);
-
-            UtilMCapture capture = new UtilMCapture(session);
-            sts = capture.LocateStreams(ref pinfo.inputs);
-            if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
-            {
-               Console.WriteLine("Failed to locate a capture module");
-               gesture.Dispose();
-               capture.Dispose();
-               session.Dispose();
-               return;
-            }
-            sts = gesture.SetProfile(ref pinfo);
-            sts = gesture.SubscribeGesture(100, OnGesure);
-
-            bool device_lost = false;
-            PXCMImage[] images = new PXCMImage[PXCMCapture.VideoStream.STREAM_LIMIT];
-            PXCMScheduler.SyncPoint[] sps = new PXCMScheduler.SyncPoint[2];
-            for (int nframes = 0; nframes < 50000; nframes++)
-            {
-               sts = capture.ReadStreamAsync(images, out sps[0]);
-               if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
-               {
-                  if (sts == pxcmStatus.PXCM_STATUS_DEVICE_LOST)
-                  {
-                     if (!device_lost) Console.WriteLine("Device disconnected");
-                     device_lost = true; nframes--;
-                     continue;
-                  }
-                  Console.WriteLine("Device failed\n");
-                  break;
-               }
-               if (device_lost)
-               {
-                  Console.WriteLine("Device reconnected");
-                  device_lost = false;
-               }
-
-               sts = gesture.ProcessImageAsync(images, out sps[1]);
-               if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR) break;
-
-               PXCMScheduler.SyncPoint.SynchronizeEx(sps);
-               if (sps[0].Synchronize(0) >= pxcmStatus.PXCM_STATUS_NO_ERROR)
-               {
-                  PXCMGesture.GeoNode data;
-                  sts = gesture.QueryNodeData(0, PXCMGesture.GeoNode.Label.LABEL_BODY_HAND_PRIMARY | PXCMGesture.GeoNode.Label.LABEL_HAND_MIDDLE, out data);
-                  if (sts >= pxcmStatus.PXCM_STATUS_NO_ERROR)
-                     Console.WriteLine("[node] {0}, {1}, {2}", data.positionImage.x, data.positionImage.y, data.timeStamp);
-               }
-
-               foreach (PXCMScheduler.SyncPoint s in sps) if (s != null) s.Dispose();
-               foreach (PXCMImage i in images) if (i != null) i.Dispose();
-            }
-
-            gesture.Dispose();
-            capture.Dispose();
-            session.Dispose();
+           //WireGestures();           
         }
-        #endregion Initializaion
+
+       private void WireGestures()
+       {
+          // Wire gesture handler
+          PXCMSession session;
+          pxcmStatus sts = PXCMSession.CreateInstance(out session);
+          if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
+          {
+             Console.WriteLine("Failed to create the SDK session");
+             return;
+          }
+
+          // Gesture Module
+          PXCMBase gesture_t;
+          sts = session.CreateImpl(PXCMGesture.CUID, out gesture_t);
+          if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
+          {
+             Console.WriteLine("Failed to load any gesture recognition module");
+             session.Dispose();
+             return;
+          }
+          PXCMGesture gesture = (PXCMGesture)gesture_t;
+
+          PXCMGesture.ProfileInfo pinfo;
+          sts = gesture.QueryProfile(0, out pinfo);
+
+          UtilMCapture capture = new UtilMCapture(session);
+          sts = capture.LocateStreams(ref pinfo.inputs);
+          if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
+          {
+             Console.WriteLine("Failed to locate a capture module");
+             gesture.Dispose();
+             capture.Dispose();
+             session.Dispose();
+             return;
+          }
+          sts = gesture.SetProfile(ref pinfo);
+          sts = gesture.SubscribeGesture(100, OnGesure);
+
+          bool device_lost = false;
+          PXCMImage[] images = new PXCMImage[PXCMCapture.VideoStream.STREAM_LIMIT];
+          PXCMScheduler.SyncPoint[] sps = new PXCMScheduler.SyncPoint[2];
+          for (int nframes = 0; nframes < 50000; nframes++)
+          {
+             sts = capture.ReadStreamAsync(images, out sps[0]);
+             if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
+             {
+                if (sts == pxcmStatus.PXCM_STATUS_DEVICE_LOST)
+                {
+                   if (!device_lost) Console.WriteLine("Device disconnected");
+                   device_lost = true; nframes--;
+                   continue;
+                }
+                Console.WriteLine("Device failed\n");
+                break;
+             }
+             if (device_lost)
+             {
+                Console.WriteLine("Device reconnected");
+                device_lost = false;
+             }
+
+             sts = gesture.ProcessImageAsync(images, out sps[1]);
+             if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR) break;
+
+             PXCMScheduler.SyncPoint.SynchronizeEx(sps);
+             if (sps[0].Synchronize(0) >= pxcmStatus.PXCM_STATUS_NO_ERROR)
+             {
+                PXCMGesture.GeoNode data;
+                sts = gesture.QueryNodeData(0, PXCMGesture.GeoNode.Label.LABEL_BODY_HAND_PRIMARY | PXCMGesture.GeoNode.Label.LABEL_HAND_MIDDLE, out data);
+                if (sts >= pxcmStatus.PXCM_STATUS_NO_ERROR)
+                   Console.WriteLine("[node] {0}, {1}, {2}", data.positionImage.x, data.positionImage.y, data.timeStamp);
+             }
+
+             foreach (PXCMScheduler.SyncPoint s in sps) if (s != null) s.Dispose();
+             foreach (PXCMImage i in images) if (i != null) i.Dispose();
+          }
+
+          gesture.Dispose();
+          capture.Dispose();
+          session.Dispose();
+       }
+
+       #endregion Initializaion
 
         #region Mouse Events
         private void OnMouseEnter(object sender, MouseEventArgs e)
@@ -154,7 +166,12 @@ namespace Lorenz
 
             var position = new Point3D(1, 0, 0);
             m_pyramid = GetNewPyramindModel(ref position, ref pyramidColor, DEFAULT_BRUSH_OPACITY);
-            
+
+            var myRotateTransform3D = new RotateTransform3D();
+            var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = m_Angle+=10 };
+            myRotateTransform3D.Rotation = myAxisAngleRotation3D;
+            m_pyramid.Transform = myRotateTransform3D;
+
             // Add the geometry model to the viewport
             m_Model3DGroup.Children.Add(m_pyramid);
             m_ModelVisual3D.Content = m_Model3DGroup;
@@ -203,8 +220,8 @@ namespace Lorenz
         {
            Console.WriteLine("[gesture] label={0}", data.label);
         }
-
         #endregion Gesture Events
+
         #region Workers
         private Model3DGroup GetNewPyramindModel(ref Point3D center, ref Color color, double opacity)
         {
@@ -215,11 +232,22 @@ namespace Lorenz
 
             Model3DGroup pyramid = new Model3DGroup();
 
+            var red = Color.FromRgb(0xFF, 0x00, 0x00);
+            var green = Color.FromRgb(0x00, 0xFF, 0x00);
+            var blue = Color.FromRgb(0x00, 0x00, 0xFF);
+            var yellow = Color.FromRgb(0xFF, 0xF0, 0x00);
+
+            pyramid.Children.Add(CreateTriangleModel(ref p2, ref p1, ref p3, ref red, opacity));
+            pyramid.Children.Add(CreateTriangleModel(ref p0, ref p1, ref p2, ref green, opacity));
+            pyramid.Children.Add(CreateTriangleModel(ref p3, ref p1, ref p0, ref blue, opacity));
+            pyramid.Children.Add(CreateTriangleModel(ref p0, ref p2, ref p3, ref yellow, opacity));
+           
+           /*
             pyramid.Children.Add(CreateTriangleModel(ref p2, ref p1, ref p3, ref color, opacity));
             pyramid.Children.Add(CreateTriangleModel(ref p0, ref p1, ref p2, ref color, opacity));
             pyramid.Children.Add(CreateTriangleModel(ref p3, ref p1, ref p0, ref color, opacity));
             pyramid.Children.Add(CreateTriangleModel(ref p0, ref p2, ref p3, ref color, opacity));
-
+           */
             ModelVisual3D model = new ModelVisual3D();
             return pyramid;
         }
