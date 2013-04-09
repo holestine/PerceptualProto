@@ -1,8 +1,0 @@
-﻿<Window x:Class="_3D.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-        xmlns:_3D="clr-namespace:_3D"
-        Title="MainWindow" Height="350" Width="525"
-        Name="x_window">
-
-</Window>
