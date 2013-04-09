@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -18,11 +20,11 @@ namespace Lorenz
         #endregion Constants
 
         #region Private Data
-        private GeometryModel3D m_GeometryModel;
+        //private GeometryModel3D m_GeometryModel;
         private Model3DGroup m_Model3DGroup;
         private ModelVisual3D m_ModelVisual3D;
         private Viewport3D m_Viewport3D;
-        private Model3DGroup m_pyramid;
+        private Model3DGroup m_Pyramid;
         private int m_Angle;
         #endregion Private Data
 
@@ -30,13 +32,12 @@ namespace Lorenz
         public MainWindow()
         {
             InitializeComponent();
-
             m_Angle = 0;
 
             // Declare scene objects.
             m_Viewport3D = new Viewport3D();
             m_Model3DGroup = new Model3DGroup();
-            m_GeometryModel = new GeometryModel3D();
+            //m_GeometryModel = new GeometryModel3D();
             m_ModelVisual3D = new ModelVisual3D();
 
             // Set up camera
@@ -63,117 +64,37 @@ namespace Lorenz
             };
             m_Model3DGroup.Children.Add(light);
 
-           var ambientLight = new AmbientLight()
+           var ambientLight = new AmbientLight
               {
                  Color = Colors.CornflowerBlue
               };
            m_Model3DGroup.Children.Add(ambientLight);
 
-           //WireGestures();           
+           var detector = new GestureDetector(OnGesture);
+           var oThread = new Thread(new ThreadStart(detector.Start));
+           oThread.Start();
         }
-
-       private void WireGestures()
-       {
-          // Wire gesture handler
-          PXCMSession session;
-          pxcmStatus sts = PXCMSession.CreateInstance(out session);
-          if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
-          {
-             Console.WriteLine("Failed to create the SDK session");
-             return;
-          }
-
-          // Gesture Module
-          PXCMBase gesture_t;
-          sts = session.CreateImpl(PXCMGesture.CUID, out gesture_t);
-          if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
-          {
-             Console.WriteLine("Failed to load any gesture recognition module");
-             session.Dispose();
-             return;
-          }
-          PXCMGesture gesture = (PXCMGesture)gesture_t;
-
-          PXCMGesture.ProfileInfo pinfo;
-          sts = gesture.QueryProfile(0, out pinfo);
-
-          UtilMCapture capture = new UtilMCapture(session);
-          sts = capture.LocateStreams(ref pinfo.inputs);
-          if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
-          {
-             Console.WriteLine("Failed to locate a capture module");
-             gesture.Dispose();
-             capture.Dispose();
-             session.Dispose();
-             return;
-          }
-          sts = gesture.SetProfile(ref pinfo);
-          sts = gesture.SubscribeGesture(100, OnGesure);
-
-          bool device_lost = false;
-          PXCMImage[] images = new PXCMImage[PXCMCapture.VideoStream.STREAM_LIMIT];
-          PXCMScheduler.SyncPoint[] sps = new PXCMScheduler.SyncPoint[2];
-          for (int nframes = 0; nframes < 50000; nframes++)
-          {
-             sts = capture.ReadStreamAsync(images, out sps[0]);
-             if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
-             {
-                if (sts == pxcmStatus.PXCM_STATUS_DEVICE_LOST)
-                {
-                   if (!device_lost) Console.WriteLine("Device disconnected");
-                   device_lost = true; nframes--;
-                   continue;
-                }
-                Console.WriteLine("Device failed\n");
-                break;
-             }
-             if (device_lost)
-             {
-                Console.WriteLine("Device reconnected");
-                device_lost = false;
-             }
-
-             sts = gesture.ProcessImageAsync(images, out sps[1]);
-             if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR) break;
-
-             PXCMScheduler.SyncPoint.SynchronizeEx(sps);
-             if (sps[0].Synchronize(0) >= pxcmStatus.PXCM_STATUS_NO_ERROR)
-             {
-                PXCMGesture.GeoNode data;
-                sts = gesture.QueryNodeData(0, PXCMGesture.GeoNode.Label.LABEL_BODY_HAND_PRIMARY | PXCMGesture.GeoNode.Label.LABEL_HAND_MIDDLE, out data);
-                if (sts >= pxcmStatus.PXCM_STATUS_NO_ERROR)
-                   Console.WriteLine("[node] {0}, {1}, {2}", data.positionImage.x, data.positionImage.y, data.timeStamp);
-             }
-
-             foreach (PXCMScheduler.SyncPoint s in sps) if (s != null) s.Dispose();
-             foreach (PXCMImage i in images) if (i != null) i.Dispose();
-          }
-
-          gesture.Dispose();
-          capture.Dispose();
-          session.Dispose();
-       }
 
        #endregion Initializaion
 
         #region Mouse Events
         private void OnMouseEnter(object sender, MouseEventArgs e)
         {
-            m_Model3DGroup.Children.Remove(m_pyramid);
+            m_Model3DGroup.Children.Remove(m_Pyramid);
             m_Viewport3D.Children.Remove(m_ModelVisual3D);
 
             var pyramidColor = Color.FromRgb(0x0F, 0xF0, 0x00);
 
             var position = new Point3D(1, 0, 0);
-            m_pyramid = GetNewPyramindModel(ref position, ref pyramidColor, DEFAULT_BRUSH_OPACITY);
+            m_Pyramid = GetNewPyramindModel(ref position, ref pyramidColor, DEFAULT_BRUSH_OPACITY);
 
             var myRotateTransform3D = new RotateTransform3D();
-            var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = m_Angle+=10 };
+            var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 1), Angle = m_Angle+=10 };
             myRotateTransform3D.Rotation = myAxisAngleRotation3D;
-            m_pyramid.Transform = myRotateTransform3D;
+            m_Pyramid.Transform = myRotateTransform3D;
 
             // Add the geometry model to the viewport
-            m_Model3DGroup.Children.Add(m_pyramid);
+            m_Model3DGroup.Children.Add(m_Pyramid);
             m_ModelVisual3D.Content = m_Model3DGroup;
             m_Viewport3D.Children.Add(m_ModelVisual3D);
         }
@@ -201,22 +122,30 @@ namespace Lorenz
             var pyramidColor = Color.FromRgb(0xFF, 0xF0, 0x00);
             var position = new Point3D(0, 0, 0);
 
-            m_pyramid = GetNewPyramindModel(ref position, ref pyramidColor, DEFAULT_BRUSH_OPACITY);
+            m_Pyramid = GetNewPyramindModel(ref position, ref pyramidColor, DEFAULT_BRUSH_OPACITY);
 
             // Add the geometry model to the viewport
-            m_Model3DGroup.Children.Add(m_pyramid);
+            m_Model3DGroup.Children.Add(m_Pyramid);
             m_ModelVisual3D.Content = m_Model3DGroup;
             m_Viewport3D.Children.Add(m_ModelVisual3D);
 
             m_Viewport3D.MouseDown += OnMouseDown;
             m_Viewport3D.MouseEnter += OnMouseEnter;
 
-            x_page.Content = m_Viewport3D;
+            XPage.Content = m_Viewport3D;
         }
+
+        private void SetPosition(int a, int b)
+        {
+           SetCursorPos(a, b);
+        }
+
+        [DllImport("User32.dll")]
+        private static extern bool SetCursorPos(int x, int y);
         #endregion MouseEvents
 
         #region Gesture Events
-        static void OnGesure(ref PXCMGesture.Gesture data)
+        static void OnGesture(ref PXCMGesture.Gesture data)
         {
            Console.WriteLine("[gesture] label={0}", data.label);
         }
@@ -225,12 +154,12 @@ namespace Lorenz
         #region Workers
         private Model3DGroup GetNewPyramindModel(ref Point3D center, ref Color color, double opacity)
         {
-            var p0 = new Point3D(center.X, center.Y, center.Z - 0.5);
-            var p1 = new Point3D(center.X, center.Y + 1.0, center.Z);
-            var p2 = new Point3D(center.X - 0.5, center.Y, center.Z - 0.5);
-            var p3 = new Point3D(center.X + 0.5, center.Y, center.Z - 0.5);
+           var p0 = new Point3D(center.X, center.Y, center.Z);
+           var p1 = new Point3D(center.X, center.Y + 1.0, center.Z + 0.5);
+           var p2 = new Point3D(center.X + 1.0, center.Y, center.Z + 1.0);
+           var p3 = new Point3D(center.X - 1.0, center.Y, center.Z + 1.0);
 
-            Model3DGroup pyramid = new Model3DGroup();
+            var pyramid = new Model3DGroup();
 
             var red = Color.FromRgb(0xFF, 0x00, 0x00);
             var green = Color.FromRgb(0x00, 0xFF, 0x00);
@@ -248,13 +177,13 @@ namespace Lorenz
             pyramid.Children.Add(CreateTriangleModel(ref p3, ref p1, ref p0, ref color, opacity));
             pyramid.Children.Add(CreateTriangleModel(ref p0, ref p2, ref p3, ref color, opacity));
            */
-            ModelVisual3D model = new ModelVisual3D();
+
             return pyramid;
         }
 
         private Model3DGroup CreateTriangleModel(ref Point3D p0, ref Point3D p1, ref Point3D p2, ref Color color, double opacity)
         {
-            MeshGeometry3D mesh = new MeshGeometry3D();
+            var mesh = new MeshGeometry3D();
             mesh.Positions.Add(p0);
             mesh.Positions.Add(p1);
             mesh.Positions.Add(p2);
@@ -267,17 +196,17 @@ namespace Lorenz
             mesh.Normals.Add(normal);
             mesh.Normals.Add(normal);
 
-            Material material = new DiffuseMaterial(new SolidColorBrush(color) { Opacity = opacity });
-            GeometryModel3D model = new GeometryModel3D(mesh, material);
-            Model3DGroup group = new Model3DGroup();
+            var material = new DiffuseMaterial(new SolidColorBrush(color) { Opacity = opacity });
+            var model = new GeometryModel3D(mesh, material);
+            var group = new Model3DGroup();
             group.Children.Add(model);
             return group;
         }
 
         private Vector3D CalculateNormal(ref Point3D p0, ref Point3D p1, ref Point3D p2)
         {
-            Vector3D v0 = new Vector3D(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);
-            Vector3D v1 = new Vector3D(p2.X - p1.X, p2.Y - p1.Y, p2.Z - p1.Z);
+            var v0 = new Vector3D(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);
+            var v1 = new Vector3D(p2.X - p1.X, p2.Y - p1.Y, p2.Z - p1.Z);
             return Vector3D.CrossProduct(v0, v1);
         }
         #endregion Workers

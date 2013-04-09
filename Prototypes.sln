@@ -1,10 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpGLWPFApplication", "SharpGLWPFApplication\SharpGLWPFApplication.csproj", "{BDDD89DD-68DA-4F7C-8832-3ACF25998BB5}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DGraphics", "3D\3DGraphics.csproj", "{0F6DC35F-BE48-44AB-943D-92E9EDC7D6F0}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lorenz", "Lorenz\Lorenz.csproj", "{66206289-DB08-40B1-BE44-AD2997AA9D01}"
 EndProject
 Global
@@ -17,26 +13,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{BDDD89DD-68DA-4F7C-8832-3ACF25998BB5}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{BDDD89DD-68DA-4F7C-8832-3ACF25998BB5}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{BDDD89DD-68DA-4F7C-8832-3ACF25998BB5}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{BDDD89DD-68DA-4F7C-8832-3ACF25998BB5}.Debug|x86.ActiveCfg = Debug|x86
-		{BDDD89DD-68DA-4F7C-8832-3ACF25998BB5}.Debug|x86.Build.0 = Debug|x86
-		{BDDD89DD-68DA-4F7C-8832-3ACF25998BB5}.Release|Any CPU.ActiveCfg = Release|x86
-		{BDDD89DD-68DA-4F7C-8832-3ACF25998BB5}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{BDDD89DD-68DA-4F7C-8832-3ACF25998BB5}.Release|Mixed Platforms.Build.0 = Release|x86
-		{BDDD89DD-68DA-4F7C-8832-3ACF25998BB5}.Release|x86.ActiveCfg = Release|x86
-		{BDDD89DD-68DA-4F7C-8832-3ACF25998BB5}.Release|x86.Build.0 = Release|x86
-		{0F6DC35F-BE48-44AB-943D-92E9EDC7D6F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0F6DC35F-BE48-44AB-943D-92E9EDC7D6F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0F6DC35F-BE48-44AB-943D-92E9EDC7D6F0}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{0F6DC35F-BE48-44AB-943D-92E9EDC7D6F0}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{0F6DC35F-BE48-44AB-943D-92E9EDC7D6F0}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0F6DC35F-BE48-44AB-943D-92E9EDC7D6F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0F6DC35F-BE48-44AB-943D-92E9EDC7D6F0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0F6DC35F-BE48-44AB-943D-92E9EDC7D6F0}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{0F6DC35F-BE48-44AB-943D-92E9EDC7D6F0}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{0F6DC35F-BE48-44AB-943D-92E9EDC7D6F0}.Release|x86.ActiveCfg = Release|Any CPU
 		{66206289-DB08-40B1-BE44-AD2997AA9D01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{66206289-DB08-40B1-BE44-AD2997AA9D01}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{66206289-DB08-40B1-BE44-AD2997AA9D01}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
