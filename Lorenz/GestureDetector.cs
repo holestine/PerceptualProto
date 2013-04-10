@@ -8,11 +8,13 @@ namespace Lorenz
 {
    class GestureDetector
    {
-      private PXCMGesture.Gesture.OnGesture mOnGesture;
+      private readonly PXCMGesture.Gesture.OnGesture mOnGesture;
+      private readonly PXCMGesture.Alert.OnAlert mOnAlert;
 
-      public GestureDetector(PXCMGesture.Gesture.OnGesture OnGesture)
+      public GestureDetector(PXCMGesture.Gesture.OnGesture OnGesture, PXCMGesture.Alert.OnAlert OnAlert)
       {
          mOnGesture = OnGesture;
+         mOnAlert = OnAlert;
       }
 
       public void Start()
@@ -52,6 +54,7 @@ namespace Lorenz
          }
          sts = gesture_t.SetProfile(ref pinfo);
          sts = gesture_t.SubscribeGesture(100, mOnGesture);
+         gesture_t.SubscribeAlert(mOnAlert);
 
          bool deviceLost = false;
          var images = new PXCMImage[PXCMCapture.VideoStream.STREAM_LIMIT];

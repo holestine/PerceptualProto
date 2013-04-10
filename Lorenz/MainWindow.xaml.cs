@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -60,14 +59,14 @@ namespace Lorenz
             Color = Colors.White,
             Direction = new Vector3D(-0.6, -0.5, -0.6)
          };
-         m_Model3DGroup.Children.Add(light);
+         //m_Model3DGroup.Children.Add(light);
 
          light = new DirectionalLight
          {
             Color = Colors.White,
             Direction = new Vector3D(0, 0, 1)
          };
-         //m_Model3DGroup.Children.Add(light);
+         m_Model3DGroup.Children.Add(light);
 
          var ambientLight = new AmbientLight
          {
@@ -75,8 +74,12 @@ namespace Lorenz
          };
          m_Model3DGroup.Children.Add(ambientLight);
 
-         var detector = new GestureDetector(OnGesture);
+         var detector = new GestureDetector(OnGesture, OnAlert);
          var oThread = new Thread(new ThreadStart(detector.Start));
+         oThread.Start();
+
+         var pipeline = new Pipeline();
+         oThread = new Thread(new ThreadStart(pipeline.Start));
          oThread.Start();
       }
 
@@ -158,9 +161,12 @@ namespace Lorenz
       {
          if (data.label == (PXCMGesture.Gesture.Label)262148)
          {
-            SetCursorPos(0, 0);
+            //SetCursorPos(0, 0);
          }
          //MessageBox.Show(string.Format("[gesture] label={0}\n body={1}", data.label, data.body));
+      }
+      static void OnAlert(ref PXCMGesture.Alert data)
+      {
       }
       #endregion Gesture Events
 
