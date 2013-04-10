@@ -1,11 +1,22 @@
 ﻿using System;
+using System.Runtime.InteropServices;
+using System.Windows;
+using System.Windows.Input;
 
 namespace Lorenz
 {
    class Pipeline : UtilMPipeline
    {
+      #region Imports
+      [DllImport("User32.dll")]
+      private static extern bool SetCursorPos(int x, int y);
+      #endregion Imports
+
       protected int nframes;
       protected bool device_lost;
+
+      private float mXStart;
+      private float mYStart;
 
       public Pipeline() : base()
       {
@@ -34,7 +45,11 @@ namespace Lorenz
          PXCMGesture.GeoNode ndata;
          pxcmStatus sts = gesture.QueryNodeData(0, PXCMGesture.GeoNode.Label.LABEL_BODY_HAND_PRIMARY, out ndata);
          if (sts >= pxcmStatus.PXCM_STATUS_NO_ERROR)
+         {
+            SetCursorPos((int)ndata.positionImage.x, (int)ndata.positionImage.y);
             Console.WriteLine("node HAND_MIDDLE ({0},{1})", ndata.positionImage.x, ndata.positionImage.y);
+         }
+            
          return (++nframes < 50000);
       }
       public void Start()
@@ -42,6 +57,12 @@ namespace Lorenz
          if (!LoopFrames())
             Console.WriteLine("Failed to initialize or stream data");
          Dispose();
+      }
+
+      public void SetInitialPos(Point pos)
+      {
+         mXStart = (int)pos.X;
+         mYStart = (int)pos.Y;
       }
    }
 }
