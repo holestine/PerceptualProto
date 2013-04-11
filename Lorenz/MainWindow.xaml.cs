@@ -1,14 +1,11 @@
 ﻿using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
 namespace Lorenz
 {
-
-
    /// <summary>
    /// Interaction logic for MainWindow.xaml
    /// </summary>
@@ -23,12 +20,10 @@ namespace Lorenz
       //private GeometryModel3D m_GeometryModel;
       private readonly Model3DGroup m_Model3DGroup;
       private readonly ModelVisual3D m_ModelVisual3D;
-      private readonly Viewport3D m_Viewport3D;
       private Model3DGroup m_Pyramid;
       private int m_Angle;
       private Thread m_PipelineThread;
       private Pipeline m_pipeline;
-
       #endregion Private Data
 
       #region Initializaion
@@ -38,9 +33,7 @@ namespace Lorenz
          m_Angle = 0;
 
          // Declare scene objects.
-         m_Viewport3D = new Viewport3D();
          m_Model3DGroup = new Model3DGroup();
-         //m_GeometryModel = new GeometryModel3D();
          m_ModelVisual3D = new ModelVisual3D();
 
          // Set up camera
@@ -50,7 +43,7 @@ namespace Lorenz
             LookDirection = new Vector3D(0, -1, 1),
             FieldOfView = 90
          };
-         m_Viewport3D.Camera = camera;
+         XViewport.Camera = camera;
 
          // Set up lights
          var light = new DirectionalLight
@@ -74,42 +67,22 @@ namespace Lorenz
          m_Model3DGroup.Children.Add(ambientLight);
 
          m_pipeline = new Pipeline();
-         //pipeline.SetInitialPos((Mouse.GetPosition(this)));
-         var p = MouseUtilities.GetPosition(this);
-         m_pipeline.SetInitialPos(new Point(p.X, p.Y));
+         m_pipeline.SetInitialPos(MouseUtilities.GetPosition(this));
+         //m_pipeline.WireOutput(Write);
          m_PipelineThread = new Thread(new ThreadStart(m_pipeline.Start));
          m_PipelineThread.Start();
       }
-
-
+      
       #endregion Initializaion
 
       #region Mouse Events
       private void OnMouseEnter(object sender, MouseEventArgs e)
       {
-         var items = m_Model3DGroup.Children.GetEnumerator();
-         foreach (var item in m_Model3DGroup.Children)
-         {
-
-         }
-
-         m_Model3DGroup.Children.Remove(m_Pyramid);
-         m_Viewport3D.Children.Remove(m_ModelVisual3D);
-
-         var pyramidColor = Color.FromRgb(0x0F, 0xF0, 0x00);
-
-         var position = new Point3D(1, 0, 0);
-         m_Pyramid = GetNewPyramindModel(ref position, ref pyramidColor, DEFAULT_BRUSH_OPACITY);
-
-         var myRotateTransform3D = new RotateTransform3D();
+         //Rotate model
          var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 1), Angle = m_Angle += 10 };
-         myRotateTransform3D.Rotation = myAxisAngleRotation3D;
-         m_Pyramid.Transform = myRotateTransform3D;
+         var myRotateTransform3D = new RotateTransform3D {Rotation = myAxisAngleRotation3D};
 
-         // Add the geometry model to the viewport
-         m_Model3DGroup.Children.Add(m_Pyramid);
-         m_ModelVisual3D.Content = m_Model3DGroup;
-         m_Viewport3D.Children.Add(m_ModelVisual3D);
+         m_Model3DGroup.Transform = myRotateTransform3D;
       }
 
       private void OnMouseDown(object sender, MouseButtonEventArgs e)
@@ -132,6 +105,7 @@ namespace Lorenz
 
       #endregion Mouse Events
 
+      #region Window Events
       private void OnLoaded(object sender, RoutedEventArgs e)
       {
          var pyramidColor = Color.FromRgb(0xFF, 0xF0, 0x00);
@@ -142,19 +116,17 @@ namespace Lorenz
          // Add the geometry model to the viewport
          m_Model3DGroup.Children.Add(m_Pyramid);
          m_ModelVisual3D.Content = m_Model3DGroup;
-         m_Viewport3D.Children.Add(m_ModelVisual3D);
+         XViewport.Children.Add(m_ModelVisual3D);
 
-         m_Viewport3D.MouseDown += OnMouseDown;
-         m_Viewport3D.MouseEnter += OnMouseEnter;
-
-         XPage.Content =m_Viewport3D;
+         XViewport.MouseDown += OnMouseDown;
+         XViewport.MouseEnter += OnMouseEnter;
       }
 
       private void OnClosed(object sender, System.EventArgs e)
       {
          m_PipelineThread.Abort();
       }
-
+      #endregion Window Events
 
       #region Workers
       private Model3DGroup GetNewPyramindModel(ref Point3D center, ref Color color, double opacity)
@@ -216,5 +188,6 @@ namespace Lorenz
          return Vector3D.CrossProduct(v0, v1);
       }
       #endregion Workers
+
    }
 }

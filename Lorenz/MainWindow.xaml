@@ -4,8 +4,13 @@
         Title="MainWindow"
         Loaded="OnLoaded"
         Closed="OnClosed">
+   <DockPanel>
 
-      <Page Name="XPage" VerticalAlignment="Stretch" Background="Aqua"/>
-     
-   
+      <DockPanel DockPanel.Dock="Top">
+         <TextBox Name="XText" HorizontalAlignment="Stretch"/>
+      </DockPanel>
+      <Canvas  Name="XCanvas" Background="GreenYellow">
+         <Viewport3D Name="XViewport" Width="{Binding ElementName=XCanvas, Path=ActualWidth}" Height="{Binding ElementName=XCanvas, Path=ActualHeight}"/>
+      </Canvas>
+   </DockPanel>
 </Window>

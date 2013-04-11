@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace Lorenz
 {
@@ -8,9 +9,9 @@ namespace Lorenz
       protected int nframes;
       protected bool device_lost;
 
-      private float mXStart;
-      private float mYStart;
-
+      private float m_XStart;
+      private float m_YStart;
+      
       public Pipeline() : base()
       {
          EnableGesture();
@@ -19,9 +20,14 @@ namespace Lorenz
       }
       public override void OnGesture(ref PXCMGesture.Gesture data)
       {
-         if (data.active) Console.WriteLine("OnGesture(" + data.label + ")");
+         if (data.active)
+         {
+            //Write("OnGesture(" + data.label + ")");
+            Console.WriteLine("OnGesture(" + data.label + ")");
+         }
+            
 
-         MouseUtilities.SendMouseRightclick(new Point(0,0));
+         MouseUtilities.RightClick(new Point(0,0));
       }
       public override bool OnDisconnect()
       {
@@ -58,8 +64,8 @@ namespace Lorenz
 
       public void SetInitialPos(Point pos)
       {
-         mXStart = (int)pos.X;
-         mYStart = (int)pos.Y;
+         m_XStart = (int)pos.X;
+         m_YStart = (int)pos.Y;
       }
    }
 }
