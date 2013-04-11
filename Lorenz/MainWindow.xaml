@@ -7,7 +7,7 @@
    <DockPanel>
 
       <DockPanel DockPanel.Dock="Top">
-         <TextBox Name="XText" HorizontalAlignment="Stretch"/>
+         <TextBox Name="XTextbox" HorizontalAlignment="Stretch"/>
       </DockPanel>
       <Canvas  Name="XCanvas" Background="GreenYellow">
          <Viewport3D Name="XViewport" Width="{Binding ElementName=XCanvas, Path=ActualWidth}" Height="{Binding ElementName=XCanvas, Path=ActualHeight}"/>

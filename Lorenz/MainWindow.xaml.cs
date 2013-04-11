@@ -1,8 +1,11 @@
-﻿using System.Threading;
+﻿using System;
+using System.ComponentModel;
+using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using System.Windows.Threading;
 
 namespace Lorenz
 {
@@ -18,13 +21,16 @@ namespace Lorenz
 
       #region Private Data
       //private GeometryModel3D m_GeometryModel;
-      private readonly Model3DGroup m_Model3DGroup;
+      private Model3DGroup m_Model3DGroup;
       private readonly ModelVisual3D m_ModelVisual3D;
       private Model3DGroup m_Pyramid;
       private int m_Angle;
       private Thread m_PipelineThread;
       private Pipeline m_pipeline;
       #endregion Private Data
+
+      
+      public delegate void PopulateTextBoxDelegate(string text);
 
       #region Initializaion
       public MainWindow()
@@ -68,7 +74,6 @@ namespace Lorenz
 
          m_pipeline = new Pipeline();
          m_pipeline.SetInitialPos(MouseUtilities.GetPosition(this));
-         //m_pipeline.WireOutput(Write);
          m_PipelineThread = new Thread(new ThreadStart(m_pipeline.Start));
          m_PipelineThread.Start();
       }
@@ -78,11 +83,24 @@ namespace Lorenz
       #region Mouse Events
       private void OnMouseEnter(object sender, MouseEventArgs e)
       {
-         //Rotate model
-         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 1), Angle = m_Angle += 10 };
-         var myRotateTransform3D = new RotateTransform3D {Rotation = myAxisAngleRotation3D};
+         var workerThread = new BackgroundWorker();
+         workerThread.DoWork += new DoWorkEventHandler(SpinModel);
+         workerThread.RunWorkerAsync();
+      }
 
-         m_Model3DGroup.Transform = myRotateTransform3D;
+      private void SpinModel(object sender, DoWorkEventArgs e)
+      {
+         for (int i = 0; i < 36; i++)
+         {
+            //Rotate model
+            var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 1), Angle = m_Angle += 10 };
+            var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
+            Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() =>
+            {
+               m_Model3DGroup.Transform = myRotateTransform3D;
+            }));
+            Thread.Sleep(100);
+         }
       }
 
       private void OnMouseDown(object sender, MouseButtonEventArgs e)

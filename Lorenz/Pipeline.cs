@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 
 namespace Lorenz
 {
@@ -11,30 +12,33 @@ namespace Lorenz
 
       private float m_XStart;
       private float m_YStart;
-      
+
+      private TextBox m_TextBox;
+
       public Pipeline() : base()
       {
          EnableGesture();
          nframes = 0;
          device_lost = false;
       }
+
       public override void OnGesture(ref PXCMGesture.Gesture data)
       {
          if (data.active)
          {
-            //Write("OnGesture(" + data.label + ")");
             Console.WriteLine("OnGesture(" + data.label + ")");
          }
-            
 
          MouseUtilities.RightClick(new Point(0,0));
       }
+
       public override bool OnDisconnect()
       {
          if (!device_lost) Console.WriteLine("Device disconnected");
          device_lost = true;
          return base.OnDisconnect();
       }
+
       public override void OnReconnect()
       {
          Console.WriteLine("Device reconnected");
@@ -48,7 +52,7 @@ namespace Lorenz
          pxcmStatus sts = gesture.QueryNodeData(0, PXCMGesture.GeoNode.Label.LABEL_BODY_HAND_PRIMARY, out ndata);
          if (sts >= pxcmStatus.PXCM_STATUS_NO_ERROR)
          {
-            MouseUtilities.SetPosition((int) ndata.positionImage.x, (int) ndata.positionImage.y);
+            MouseUtilities.SetPosition((int) (m_XStart-2*ndata.positionImage.x), (int) (2*ndata.positionImage.y));
             Console.WriteLine("node HAND_MIDDLE ({0},{1})", ndata.positionImage.x, ndata.positionImage.y);
          }
 
@@ -67,5 +71,11 @@ namespace Lorenz
          m_XStart = (int)pos.X;
          m_YStart = (int)pos.Y;
       }
+
+      static void test()
+      {
+         var dispatcher = Application.Current.Dispatcher;
+      }
+      
    }
 }
