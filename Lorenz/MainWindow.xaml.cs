@@ -1,6 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using System.Threading;
+﻿using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -9,37 +7,13 @@ using System.Windows.Media.Media3D;
 
 namespace Lorenz
 {
-   public static class MouseUtilities
-   {
-      public static Point CorrectGetPosition(Visual relativeTo)
-      {
-         Win32Point w32Mouse = new Win32Point();
-         GetCursorPos(ref w32Mouse);
-         return new Point(w32Mouse.X, w32Mouse.Y);
-      }
 
-      [StructLayout(LayoutKind.Sequential)]
-      internal struct Win32Point
-      {
-         public Int32 X;
-         public Int32 Y;
-      };
-
-      [DllImport("user32.dll")]
-      [return: MarshalAs(UnmanagedType.Bool)]
-      internal static extern bool GetCursorPos(ref Win32Point pt);
-   }
 
    /// <summary>
    /// Interaction logic for MainWindow.xaml
    /// </summary>
    public partial class MainWindow
    {
-      #region Imports
-      [DllImport("User32.dll")]
-      private static extern bool SetCursorPos(int x, int y);
-      #endregion Imports
-
       #region Constants
       private const double DEFAULT_BRUSH_OPACITY = 0.9;
       private const double SQRT3 = 1.73205080757f;
@@ -47,11 +21,14 @@ namespace Lorenz
 
       #region Private Data
       //private GeometryModel3D m_GeometryModel;
-      private Model3DGroup m_Model3DGroup;
-      private ModelVisual3D m_ModelVisual3D;
-      private Viewport3D m_Viewport3D;
+      private readonly Model3DGroup m_Model3DGroup;
+      private readonly ModelVisual3D m_ModelVisual3D;
+      private readonly Viewport3D m_Viewport3D;
       private Model3DGroup m_Pyramid;
       private int m_Angle;
+      private Thread m_PipelineThread;
+      private Pipeline m_pipeline;
+
       #endregion Private Data
 
       #region Initializaion
@@ -81,31 +58,27 @@ namespace Lorenz
             Color = Colors.White,
             Direction = new Vector3D(-0.6, -0.5, -0.6)
          };
-         //m_Model3DGroup.Children.Add(light);
-
+         m_Model3DGroup.Children.Add(light);
+         /*
          light = new DirectionalLight
          {
             Color = Colors.White,
             Direction = new Vector3D(0, 0, 1)
          };
          m_Model3DGroup.Children.Add(light);
-
+         */
          var ambientLight = new AmbientLight
          {
             Color = Colors.CornflowerBlue
          };
          m_Model3DGroup.Children.Add(ambientLight);
 
-         var detector = new GestureDetector(OnGesture, OnAlert);
-         var oThread = new Thread(new ThreadStart(detector.Start));
-         oThread.Start();
-
-         var pipeline = new Pipeline();
+         m_pipeline = new Pipeline();
          //pipeline.SetInitialPos((Mouse.GetPosition(this)));
-         var p = MouseUtilities.CorrectGetPosition(this);
-         pipeline.SetInitialPos(new Point(p.X, p.Y));
-         oThread = new Thread(new ThreadStart(pipeline.Start));
-         oThread.Start();
+         var p = MouseUtilities.GetPosition(this);
+         m_pipeline.SetInitialPos(new Point(p.X, p.Y));
+         m_PipelineThread = new Thread(new ThreadStart(m_pipeline.Start));
+         m_PipelineThread.Start();
       }
 
 
@@ -157,6 +130,8 @@ namespace Lorenz
          m_Model3DGroup.Children.Add(triangle);
       }
 
+      #endregion Mouse Events
+
       private void OnLoaded(object sender, RoutedEventArgs e)
       {
          var pyramidColor = Color.FromRgb(0xFF, 0xF0, 0x00);
@@ -172,29 +147,14 @@ namespace Lorenz
          m_Viewport3D.MouseDown += OnMouseDown;
          m_Viewport3D.MouseEnter += OnMouseEnter;
 
-         XPage.Content = m_Viewport3D;
+         XPage.Content =m_Viewport3D;
       }
 
-      private void SetPosition(int a, int b)
+      private void OnClosed(object sender, System.EventArgs e)
       {
-         SetCursorPos(a, b);
+         m_PipelineThread.Abort();
       }
 
-      #endregion Mouse Events
-
-      #region Gesture Events
-      static void OnGesture(ref PXCMGesture.Gesture data)
-      {
-         if (data.label == (PXCMGesture.Gesture.Label)262148)
-         {
-            //SetCursorPos(0, 0);
-         }
-         //MessageBox.Show(string.Format("[gesture] label={0}\n body={1}", data.label, data.body));
-      }
-      static void OnAlert(ref PXCMGesture.Alert data)
-      {
-      }
-      #endregion Gesture Events
 
       #region Workers
       private Model3DGroup GetNewPyramindModel(ref Point3D center, ref Color color, double opacity)
