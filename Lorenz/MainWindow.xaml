@@ -3,13 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow"
         Loaded="OnLoaded"
-        Closed="OnClosed">
+        Closed="OnClosed"
+        LocationChanged="OnLocationChanged">
    <DockPanel>
 
-      <DockPanel DockPanel.Dock="Top">
-         <TextBox Name="XTextbox" HorizontalAlignment="Stretch"/>
+      <DockPanel DockPanel.Dock="Left">
+         <TextBox Name="XTextbox" HorizontalAlignment="Stretch" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Width="250" Background="GreenYellow"/>
       </DockPanel>
-      <Canvas  Name="XCanvas" Background="GreenYellow">
+      <Canvas  Name="XCanvas" Background="DarkSeaGreen">
          <Viewport3D Name="XViewport" Width="{Binding ElementName=XCanvas, Path=ActualWidth}" Height="{Binding ElementName=XCanvas, Path=ActualHeight}"/>
       </Canvas>
    </DockPanel>
