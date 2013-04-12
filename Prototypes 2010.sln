@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lorenz 2010", "Lorenz\Lorenz 2010.csproj", "{492016FD-9F31-4F25-9134-55A24F84568A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PC SDK POC 2010", "Lorenz\PC SDK POC 2010.csproj", "{492016FD-9F31-4F25-9134-55A24F84568A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
