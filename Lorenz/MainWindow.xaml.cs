@@ -122,16 +122,13 @@ namespace Lorenz
 
       private void UpdateUI(object sender, RunWorkerCompletedEventArgs e)
       {
-         for (int i = 0; i < 10; i++)
+         //Rotate model
+         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 1), Angle = m_Angle += 10 };
+         var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
+         Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() =>
          {
-            //Rotate model
-            var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 1), Angle = m_Angle += 10 };
-            var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
-            Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() =>
-            {
-               m_Model3DGroup.Transform = myRotateTransform3D;
-            }));
-         }
+            m_Model3DGroup.Transform = myRotateTransform3D;
+         }));
       }
 
       private void OnMouseDown(object sender, MouseButtonEventArgs e)
@@ -232,6 +229,10 @@ namespace Lorenz
          mesh.TriangleIndices.Add(2);
 
          Vector3D normal = CalculateNormal(ref p0, ref p1, ref p2);
+         mesh.Normals.Add(normal);
+         mesh.Normals.Add(normal);
+         mesh.Normals.Add(normal);
+         normal = CalculateNormal(ref p1, ref p0, ref p2);
          mesh.Normals.Add(normal);
          mesh.Normals.Add(normal);
          mesh.Normals.Add(normal);

@@ -36,7 +36,15 @@ namespace Lorenz
          m_InitialHandPos.X=ndata.massCenterImage.x;
          m_InitialHandPos.Y = ndata.massCenterImage.y;
 
-         MouseUtilities.RightClick(new Point(0,0));
+         switch (data.label)
+         {
+            case PXCMGesture.Gesture.Label.LABEL_POSE_PEACE:
+               MouseUtilities.Click(new Point(0, 0));
+               break;
+            default:
+               MouseUtilities.RightClick(new Point(0, 0));
+               break;
+         }
       }
 
       public override bool OnDisconnect()

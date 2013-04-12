@@ -51,6 +51,11 @@ namespace Lorenz
          mouse_event(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP, (int)p.X, (int)p.Y, 0, 0);
       }
 
+      public static void Click(Point p)
+      {
+         mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, (int)p.X, (int)p.Y, 0, 0);
+      }
+
       public static void DoubleClick(Point p)
       {
          mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, (int)p.X, (int)p.Y, 0, 0);
