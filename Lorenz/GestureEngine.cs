@@ -3,10 +3,17 @@ using System.Windows;
 
 namespace Lorenz
 {
-   class GestureEngine : UtilMPipeline
+   sealed class GestureEngine : UtilMPipeline
    {
-      protected int NumFrames;
-      protected bool DeviceLost;
+      private enum Mode
+      {
+         Mouse,
+         Idle
+      };
+
+      private Mode m_Mode;
+      private int m_NumFrames;
+      private bool m_DeviceLost;
 
       private float m_XOrigin;
       private float m_YOrigin;
@@ -17,9 +24,25 @@ namespace Lorenz
       public GestureEngine(MainWindow mainWindow)
       {
          EnableGesture();
-         NumFrames = 0;
-         DeviceLost = false;
+         m_Mode = Mode.Idle;
+         m_NumFrames = 0;
+         m_DeviceLost = false;
          m_UI = mainWindow;
+      }
+
+      public override void OnAlert(ref PXCMGesture.Alert data)
+      {
+         switch (data.label)
+         {
+            case PXCMGesture.Alert.Label.LABEL_GEONODE_INACTIVE:
+               m_Mode = Mode.Idle;
+               m_UI.Messages = "IDLE MODE";
+               break;
+            default:
+               m_UI.Messages = "Right Click";
+               MouseUtilities.RightClick(new Point(0, 0));
+               break;
+         }
       }
 
       public override void OnGesture(ref PXCMGesture.Gesture data)
@@ -31,54 +54,70 @@ namespace Lorenz
 
          PXCMGesture gesture = QueryGesture();
          PXCMGesture.GeoNode ndata;
-         pxcmStatus sts = gesture.QueryNodeData(0, PXCMGesture.GeoNode.Label.LABEL_BODY_HAND_PRIMARY, out ndata);
+         pxcmStatus sts = gesture.QueryNodeData(0, PXCMGesture.GeoNode.Label.LABEL_BODY_HAND_PRIMARY | PXCMGesture.GeoNode.Label.LABEL_FINGER_INDEX, out ndata);
 
-         m_InitialHandPos.X=ndata.massCenterImage.x;
-         m_InitialHandPos.Y = ndata.massCenterImage.y;
-
-         switch (data.label)
+         if (sts >= pxcmStatus.PXCM_STATUS_NO_ERROR)
          {
-            case PXCMGesture.Gesture.Label.LABEL_POSE_PEACE:
-               MouseUtilities.Click(new Point(0, 0));
-               break;
-            default:
-               MouseUtilities.RightClick(new Point(0, 0));
-               break;
+            m_InitialHandPos.X = ndata.massCenterImage.x;
+            m_InitialHandPos.Y = ndata.massCenterImage.y;
+
+            switch (data.label)
+            {
+               case PXCMGesture.Gesture.Label.LABEL_POSE_PEACE:
+                  m_UI.Messages = "Click";
+                  MouseUtilities.Click(new Point(0, 0));
+                  break;
+               case PXCMGesture.Gesture.Label.LABEL_POSE_BIG5:
+                  m_Mode = Mode.Mouse;
+                  m_UI.Messages = "MOUSE MODE";
+                  break;
+               default:
+                  m_UI.Messages = "Right Click";
+                  MouseUtilities.RightClick(new Point(0, 0));
+                  break;
+            }
          }
       }
 
       public override bool OnDisconnect()
       {
-         if (!DeviceLost)
+         if (!m_DeviceLost)
          {
             m_UI.Messages = "Device disconnected";
          }
-         DeviceLost = true;
+         m_DeviceLost = true;
          return base.OnDisconnect();
       }
 
       public override void OnReconnect()
       {
          m_UI.Messages = "Device reconnected";
-         DeviceLost = false;
+         m_DeviceLost = false;
       }
 
       public override bool OnNewFrame()
       {
          PXCMGesture gesture = QueryGesture();
-         PXCMGesture.GeoNode ndata;
-         pxcmStatus sts = gesture.QueryNodeData(0, PXCMGesture.GeoNode.Label.LABEL_BODY_HAND_PRIMARY, out ndata);
-         if (sts >= pxcmStatus.PXCM_STATUS_NO_ERROR)
+         var data = new PXCMGesture.GeoNode[5];
+
+         pxcmStatus sts = gesture.QueryNodeData(0, PXCMGesture.GeoNode.Label.LABEL_BODY_HAND_PRIMARY | PXCMGesture.GeoNode.Label.LABEL_FINGER_INDEX, data);
+
+        if (sts >= pxcmStatus.PXCM_STATUS_NO_ERROR)
          {
-            if (ndata.confidence > 90)
+            if (data[0].confidence > 90)
             {
-               // TODO: Need to improve mouse positioning
-               MouseUtilities.SetPosition((int)(m_XOrigin - ndata.massCenterImage.x + m_InitialHandPos.X), (int)(m_YOrigin + ndata.massCenterImage.y - m_InitialHandPos.Y));   
+               // TODO: Improve mouse positioning
+               if (m_Mode == Mode.Mouse)
+               {
+                  var xPos = m_XOrigin - data[0].positionImage.x + m_InitialHandPos.X;
+                  var yPos = m_YOrigin + data[0].positionImage.y - m_InitialHandPos.Y;
+                  m_UI.Messages = String.Format("New Mouse Position ({0}, {1})", xPos, yPos);
+                  MouseUtilities.SetPosition((int)xPos, (int)yPos);
+               }
             }
-            m_UI.Messages = String.Format("node HAND_MIDDLE ({0},{1})", ndata.positionImage.x, ndata.positionImage.y);
          }
 
-         return (++NumFrames < 50000);
+         return (++m_NumFrames < 50000);
       }
 
       public void Start()

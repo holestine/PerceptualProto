@@ -22,7 +22,7 @@ namespace Lorenz
       #region Private Data
       private Model3DGroup m_Model3DGroup;
       private ModelVisual3D m_ModelVisual3D;
-      private Model3DGroup m_Pyramid;
+      private Model3DGroup m_Lorenz;
       private int m_Angle;
       private Thread m_PipelineThread;
       private GestureEngine m_GestureEngine;
@@ -68,8 +68,8 @@ namespace Lorenz
          // Set up camera
          var camera = new PerspectiveCamera
          {
-            Position = new Point3D(0, 10, -10),
-            LookDirection = new Vector3D(0, -1, 1),
+            Position = new Point3D(0, 100, -50),
+            LookDirection = new Vector3D(0, -2, 1),
             FieldOfView = 90
          };
          XViewport.Camera = camera;
@@ -157,13 +157,12 @@ namespace Lorenz
       {
          m_GestureEngine.SetOrigin(GetCanvasCenter());
 
-         var pyramidColor = Color.FromRgb(0xFF, 0xF0, 0x00);
-         var position = new Point3D(0, 0, 0);
+         var color = Color.FromRgb(0xFF, 0xF0, 0x00);
 
-         m_Pyramid = GetNewPyramindModel(ref position, ref pyramidColor, DEFAULT_BRUSH_OPACITY);
+         var position = new Point3D(-100, -100, -500);
 
          // Add the geometry model to the viewport
-         m_Model3DGroup.Children.Add(m_Pyramid);
+         m_Model3DGroup.Children.Add(GetNewLorenzModel(ref position, ref color, DEFAULT_BRUSH_OPACITY));
          m_ModelVisual3D.Content = m_Model3DGroup;
          XViewport.Children.Add(m_ModelVisual3D);
 
@@ -190,6 +189,24 @@ namespace Lorenz
       #endregion Window Events
 
       #region Graphics
+
+      private Model3DGroup GetNewLorenzModel(ref Point3D pos, ref Color color, double opacity)
+      {
+         var lorenz = new Model3DGroup();
+         const int NUMPOINTS = 1000;
+         double mStepSize = .005;
+
+    	
+    	   for (int i = 0; i < NUMPOINTS; i++)
+    	   {
+            lorenz.Children.Add(GetNewPyramindModel(ref pos, ref color, opacity));
+        	   pos = RK4Lorenz(pos, mStepSize); 
+    	   }
+
+         m_Lorenz = lorenz;
+         return lorenz;
+      }
+
       private Model3DGroup GetNewPyramindModel(ref Point3D center, ref Color color, double opacity)
       {
          var p0 = new Point3D(center.X, center.Y, center.Z);
@@ -252,6 +269,59 @@ namespace Lorenz
          return Vector3D.CrossProduct(v0, v1);
       }
       #endregion Graphics
+
+      #region Math
+  
+      private Point3D RK4Lorenz(Point3D pos, double dt)
+    {
+	   // Obtain and store first set of slopes
+	   Point3D f1 = Lorenz(pos);
+	
+	   // Compute next Euler position with first set of slopes and half time step
+	   Point3D xyz = Euler(pos, f1, dt/2);
+	
+	   // Obtain and store second set of slopes
+	   Point3D f2 = Lorenz(xyz);
+	
+	   // Compute next Euler position with second set of slopes and half time step
+	   xyz = Euler(pos, f2, dt/2);
+	
+	   // Obtain and store third set of slopes
+	   Point3D f3 = Lorenz(xyz);
+	
+	   // Compute next Euler position with third set of slopes and full time step
+	   xyz = Euler(pos, f3, dt);
+	
+	   // Obtain and store fourth set of slopes
+	   Point3D f4 = Lorenz(xyz);
+	
+	   // Compute weighted average of slopes according to Runge-Kutta fourth order algorithm
+	   Point3D rkSlope = new Point3D(f1.X/6 + f2.X/3 + f3.X/3 + f4.X/6,
+                                    f1.Y/6 + f2.Y/3 + f3.Y/3 + f4.Y/6,
+                                    f1.Z/6 + f2.Z/3 + f3.Z/3 + f4.Z/6);
+	
+	   // Return next position using Euler with Runge-Kutta slope
+	   return Euler(pos, rkSlope, dt);
+    }
+    
+
+	private Point3D Lorenz(Point3D pos)
+	{
+      double sigma = 10;
+		double rho   = 28;
+		double beta  = 8/3;
+		
+		return new Point3D(sigma * (pos.Y - pos.X),
+				pos.X * (rho - pos.Z) - pos.Y, 
+				pos.X * pos.Y - beta * pos.Z);
+	}
+	
+	   private Point3D Euler(Point3D pos, Point3D slope, double dt)
+	   {
+		   return new Point3D(pos.X + slope.X * dt, pos.Y + slope.Y * dt, pos.Z + slope.Z * dt);
+	   }
+
+      #endregion Math
 
       #region Private Methods
       private Point GetCanvasCenter()
