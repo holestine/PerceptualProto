@@ -26,28 +26,22 @@ namespace Lorenz
       private int m_Angle;
       private Thread m_PipelineThread;
       private GestureEngine m_GestureEngine;
+      private Point3DCollection m_Points;
       #endregion Private Data
 
-      #region Accessors
+      #region Public Methods
 
-      public string Messages
+      public void SendMessage(string message)
       {
-         get
-         {
-            return XTextbox.Text;
-         }
-         set
-         {
-            Dispatcher.BeginInvoke(
+         Dispatcher.BeginInvoke(
             (Action)delegate
             {
-               XTextbox.Text += value + "\n";
+               XTextbox.Text += message + "\n";
                XTextbox.ScrollToEnd();
             });
-         } 
       }
 
-      #endregion Accessors
+      #endregion Public Methods
 
       #region Initializaion
       public MainWindow()
@@ -60,6 +54,7 @@ namespace Lorenz
       private void InitializeGraphics()
       {
          m_Angle = 0;
+         m_Points = new Point3DCollection();
 
          // Declare scene objects.
          m_Model3DGroup = new Model3DGroup();
@@ -102,26 +97,10 @@ namespace Lorenz
 
       private void OnMouseEnter(object sender, MouseEventArgs e)
       {
-         var workerThread = new BackgroundWorker();
-         workerThread.DoWork += DoAsyncWork;
-         workerThread.RunWorkerCompleted += UpdateUI;
-         workerThread.RunWorkerAsync();
-      }
-
-      private void DoAsyncWork(object sender, DoWorkEventArgs e)
-      {
-
-      }
-
-      private void UpdateUI(object sender, RunWorkerCompletedEventArgs e)
-      {
-         //Rotate model
-         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 1), Angle = m_Angle += 10 };
+         // Set selected item
+         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = m_Angle += 10 };
          var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
-         Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() =>
-         {
-            m_Model3DGroup.Transform = myRotateTransform3D;
-         }));
+         m_Model3DGroup.Transform = myRotateTransform3D;
       }
 
       private void OnMouseDown(object sender, MouseButtonEventArgs e)
@@ -234,6 +213,12 @@ namespace Lorenz
          mesh.Positions.Add(p0);
          mesh.Positions.Add(p1);
          mesh.Positions.Add(p2);
+
+         //m_Points.Add(p0);
+         ///m_Points.Add(p1);
+         //m_Points.Add(p2);
+         //mesh.Positions = m_Points;
+
          mesh.TriangleIndices.Add(0);
          mesh.TriangleIndices.Add(1);
          mesh.TriangleIndices.Add(2);
@@ -261,6 +246,7 @@ namespace Lorenz
          var v1 = new Vector3D(p2.X - p1.X, p2.Y - p1.Y, p2.Z - p1.Z);
          return Vector3D.CrossProduct(v0, v1);
       }
+
       #endregion Graphics
 
       #region Math
@@ -297,8 +283,7 @@ namespace Lorenz
 	   return Euler(pos, rkSlope, dt);
     }
     
-
-	private Point3D Lorenz(Point3D pos)
+	   private Point3D Lorenz(Point3D pos)
 	{
       double sigma = 10;
 		double rho   = 28;
@@ -317,13 +302,40 @@ namespace Lorenz
       #endregion Math
 
       #region Private Methods
+
       private Point GetCanvasCenter()
       {
          return new Point(Left + XCanvas.ActualWidth/2 + XTextbox.Width, Top + XCanvas.ActualHeight/2);
       }
+      
       #endregion Private Methods
    }
 }
 
+#region Notes
+/*
+      private void OnMouseEnter(object sender, MouseEventArgs e)
+      {
+         var workerThread = new BackgroundWorker();
+         workerThread.DoWork += DoAsyncWork;
+         workerThread.RunWorkerCompleted += UpdateUI;
+         workerThread.RunWorkerAsync();
+      }
 
+      private void DoAsyncWork(object sender, DoWorkEventArgs e)
+      {
 
+      }
+
+      private void UpdateUI(object sender, RunWorkerCompletedEventArgs e)
+      {
+         //Rotate model
+         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 1), Angle = m_Angle += 10 };
+         var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
+         Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() =>
+         {
+            m_Model3DGroup.Transform = myRotateTransform3D;
+         }));
+      }
+ */
+#endregion Notes

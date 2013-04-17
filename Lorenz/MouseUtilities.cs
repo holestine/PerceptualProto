@@ -46,11 +46,6 @@ namespace Lorenz
          SetCursorPos(x, y);
       }
 
-      public static void RightClick(Point p)
-      {
-         mouse_event(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP, (int)p.X, (int)p.Y, 0, 0);
-      }
-
       public static void Click(Point p)
       {
          mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, (int)p.X, (int)p.Y, 0, 0);
@@ -63,6 +58,11 @@ namespace Lorenz
          Thread.Sleep(150);
 
          mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, (int)p.X, (int)p.Y, 0, 0);
+      }
+
+      public static void RightClick(Point p)
+      {
+         mouse_event(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP, (int)p.X, (int)p.Y, 0, 0);
       }
 
       public static void RightDoubleClick(Point p)
