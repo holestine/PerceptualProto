@@ -68,8 +68,8 @@ namespace Lorenz
          // Set up camera
          var camera = new PerspectiveCamera
          {
-            Position = new Point3D(0, 100, -50),
-            LookDirection = new Vector3D(0, -2, 1),
+            Position = new Point3D(1, 5, -20),
+            LookDirection = new Vector3D(-1, -5, 20),
             FieldOfView = 90
          };
          XViewport.Camera = camera;
@@ -77,21 +77,14 @@ namespace Lorenz
          // Set up lights
          var light = new DirectionalLight
          {
-            Color = Colors.White,
-            Direction = new Vector3D(-0.6, -0.5, -0.6)
-         };
-         m_Model3DGroup.Children.Add(light);
-         /*
-         light = new DirectionalLight
-         {
-            Color = Colors.White,
+            Color = Color.FromRgb(0xA0, 0xA0, 0xA0),
             Direction = new Vector3D(0, 0, 1)
          };
          m_Model3DGroup.Children.Add(light);
-         */
+         
          var ambientLight = new AmbientLight
          {
-            Color = Colors.CornflowerBlue
+             Color = Color.FromRgb(0x40, 0x40, 0x40)
          };
          m_Model3DGroup.Children.Add(ambientLight);
       }
