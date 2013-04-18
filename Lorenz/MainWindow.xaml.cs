@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Threading;
 using System.Windows;
@@ -17,6 +18,12 @@ namespace Lorenz
       #region Constants
       private const double DEFAULT_BRUSH_OPACITY = 0.9;
       //private const double SQRT3 = 1.73205080757f;
+      private Color RED = Color.FromRgb(0xFF, 0x00, 0x00);
+      private Color GREEN = Color.FromRgb(0x00, 0xFF, 0x00);
+      private Color BLUE = Color.FromRgb(0x00, 0x00, 0xFF);
+      private Color WHITE = Color.FromRgb(0xFF, 0xFF, 0xFF);
+      private Color DIRECTION_LIGHT = Color.FromRgb(0xA0, 0xA0, 0xA0);
+      private Color AMBIENT_LIGHT = Color.FromRgb(0x40, 0x40, 0x40);
       #endregion Constants
 
       #region Private Data
@@ -26,7 +33,7 @@ namespace Lorenz
       private int m_Angle;
       private Thread m_PipelineThread;
       private GestureEngine m_GestureEngine;
-      private Point3DCollection m_Points;
+      private Collection<MeshGeometry3D> m_Geometry;
       #endregion Private Data
 
       #region Public Methods
@@ -54,8 +61,6 @@ namespace Lorenz
       private void InitializeGraphics()
       {
          m_Angle = 0;
-         m_Points = new Point3DCollection();
-
          // Declare scene objects.
          m_Model3DGroup = new Model3DGroup();
          m_ModelVisual3D = new ModelVisual3D();
@@ -72,14 +77,14 @@ namespace Lorenz
          // Set up lights
          var light = new DirectionalLight
          {
-            Color = Color.FromRgb(0xA0, 0xA0, 0xA0),
+            Color = DIRECTION_LIGHT,
             Direction = new Vector3D(0, 0, 1)
          };
          m_Model3DGroup.Children.Add(light);
          
          var ambientLight = new AmbientLight
          {
-             Color = Color.FromRgb(0x40, 0x40, 0x40)
+            Color = AMBIENT_LIGHT
          };
          m_Model3DGroup.Children.Add(ambientLight);
       }
@@ -98,19 +103,29 @@ namespace Lorenz
       private void OnMouseEnter(object sender, MouseEventArgs e)
       {
          // Set selected item
-         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = m_Angle += 10 };
+         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 0, 1), Angle = m_Angle += 10 };
          var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
          m_Model3DGroup.Transform = myRotateTransform3D;
+
+         int i = 0;
+         foreach (var pyramid in m_Lorenz.Children)
+         {
+            if (i%2 == 0)
+            {
+               pyramid.Transform = myRotateTransform3D;   
+            }
+            i++;
+         }
       }
 
       private void OnMouseDown(object sender, MouseButtonEventArgs e)
       {
-         var p0 = new Point3D(0, 0, 1);
-         var p1 = new Point3D(5, 0, 1);
-         var p2 = new Point3D(0, 5, 1);
+         var p0 = new Point3D(-5, 0, 1);
+         var p1 = new Point3D( 5, 0, 1);
+         var p2 = new Point3D( 0, 5, 1);
          var color = Color.FromRgb(0x0F, 0xF0, 0xF0);
-         var triangle = CreateTriangleModel(ref p0, ref p1, ref p2, ref color,
-         DEFAULT_BRUSH_OPACITY);
+
+         var triangle = CreateTriangleModel(ref p0, ref p1, ref p2, ref color, DEFAULT_BRUSH_OPACITY);
 
          m_Angle += 10;
          var myRotateTransform3D = new RotateTransform3D();
@@ -129,12 +144,11 @@ namespace Lorenz
       {
          m_GestureEngine.SetOrigin(GetCanvasCenter());
 
-         var color = Color.FromRgb(0xFF, 0xF0, 0x00);
-
          var position = new Point3D(-100, -100, -500);
 
          // Add the geometry model to the viewport
-         m_Model3DGroup.Children.Add(GetNewLorenzModel(ref position, ref color, DEFAULT_BRUSH_OPACITY));
+         m_Lorenz = CreateNewLorenzModel(ref position, ref RED, ref GREEN, ref BLUE, ref WHITE, DEFAULT_BRUSH_OPACITY);
+         m_Model3DGroup.Children.Add(m_Lorenz);
          m_ModelVisual3D.Content = m_Model3DGroup;
          XViewport.Children.Add(m_ModelVisual3D);
 
@@ -162,47 +176,35 @@ namespace Lorenz
 
       #region Graphics
 
-      private Model3DGroup GetNewLorenzModel(ref Point3D pos, ref Color color, double opacity)
+      private Model3DGroup CreateNewLorenzModel(ref Point3D pos, ref Color color1, ref Color color2, ref Color color3, ref Color color4, double opacity)
       {
-         var lorenz = new Model3DGroup();
-         const int NUMPOINTS = 1000;
-         double mStepSize = .005;
+         const int NUMPOINTS = 500;
+         const double STEP_SIZE = .01;
 
-    	
-    	   for (int i = 0; i < NUMPOINTS; i++)
+         var lorenz = new Model3DGroup();
+
+    	   for (var i = 0; i < NUMPOINTS; i++)
     	   {
-            lorenz.Children.Add(GetNewPyramindModel(ref pos, ref color, opacity));
-        	   pos = RK4Lorenz(pos, mStepSize); 
+            lorenz.Children.Add(GetNewPyramindModel(ref pos, ref color1, ref color2, ref color3, ref color4, opacity));
+        	   pos = RK4Lorenz(pos, STEP_SIZE); 
     	   }
 
-         m_Lorenz = lorenz;
          return lorenz;
       }
 
-      private Model3DGroup GetNewPyramindModel(ref Point3D center, ref Color color, double opacity)
+      private Model3DGroup GetNewPyramindModel(ref Point3D center, ref Color color1, ref Color color2, ref Color color3, ref Color color4, double opacity)
       {
+         var pyramid = new Model3DGroup();
+
          var p0 = new Point3D(center.X, center.Y, center.Z);
          var p1 = new Point3D(center.X, center.Y + 1.0, center.Z + 0.5);
          var p2 = new Point3D(center.X + 1.0, center.Y, center.Z + 1.0);
          var p3 = new Point3D(center.X - 1.0, center.Y, center.Z + 1.0);
 
-         var pyramid = new Model3DGroup();
-
-         var red = Color.FromRgb(0xFF, 0x00, 0x00);
-         var green = Color.FromRgb(0x00, 0xFF, 0x00);
-         var blue = Color.FromRgb(0x00, 0x00, 0xFF);
-
-         pyramid.Children.Add(CreateTriangleModel(ref p2, ref p1, ref p3, ref red, opacity));
-         pyramid.Children.Add(CreateTriangleModel(ref p0, ref p1, ref p2, ref green, opacity));
-         pyramid.Children.Add(CreateTriangleModel(ref p3, ref p1, ref p0, ref blue, opacity));
-         pyramid.Children.Add(CreateTriangleModel(ref p0, ref p2, ref p3, ref color, opacity));
-
-         /*
-          pyramid.Children.Add(CreateTriangleModel(ref p2, ref p1, ref p3, ref color, opacity));
-          pyramid.Children.Add(CreateTriangleModel(ref p0, ref p1, ref p2, ref color, opacity));
-          pyramid.Children.Add(CreateTriangleModel(ref p3, ref p1, ref p0, ref color, opacity));
-          pyramid.Children.Add(CreateTriangleModel(ref p0, ref p2, ref p3, ref color, opacity));
-         */
+         pyramid.Children.Add(CreateTriangleModel(ref p2, ref p1, ref p3, ref color1, opacity));          
+         pyramid.Children.Add(CreateTriangleModel(ref p0, ref p1, ref p2, ref color2, opacity));
+         pyramid.Children.Add(CreateTriangleModel(ref p3, ref p1, ref p0, ref color3, opacity));
+         pyramid.Children.Add(CreateTriangleModel(ref p0, ref p2, ref p3, ref color4, opacity));         
 
          return pyramid;
       }
@@ -214,11 +216,6 @@ namespace Lorenz
          mesh.Positions.Add(p1);
          mesh.Positions.Add(p2);
 
-         //m_Points.Add(p0);
-         ///m_Points.Add(p1);
-         //m_Points.Add(p2);
-         //mesh.Positions = m_Points;
-
          mesh.TriangleIndices.Add(0);
          mesh.TriangleIndices.Add(1);
          mesh.TriangleIndices.Add(2);
@@ -227,6 +224,7 @@ namespace Lorenz
          mesh.Normals.Add(normal);
          mesh.Normals.Add(normal);
          mesh.Normals.Add(normal);
+
          normal = CalculateNormal(ref p1, ref p0, ref p2);
          mesh.Normals.Add(normal);
          mesh.Normals.Add(normal);
