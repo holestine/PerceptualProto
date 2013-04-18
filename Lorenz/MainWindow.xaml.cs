@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Media3D;
-using System.Windows.Threading;
 
 namespace Lorenz
 {
@@ -34,6 +33,8 @@ namespace Lorenz
       private Thread m_PipelineThread;
       private GestureEngine m_GestureEngine;
       private Collection<MeshGeometry3D> m_Geometry;
+      private Model3DGroup m_pyramid;
+      private double m_i;
       #endregion Private Data
 
       #region Public Methods
@@ -61,9 +62,12 @@ namespace Lorenz
       private void InitializeGraphics()
       {
          m_Angle = 0;
+         m_i = 0;
          // Declare scene objects.
          m_Model3DGroup = new Model3DGroup();
          m_ModelVisual3D = new ModelVisual3D();
+         var pos = new Point3D(0, 0, 0);
+         m_pyramid = GetNewPyramindModel(ref pos, ref RED, ref GREEN, ref BLUE, ref WHITE, DEFAULT_BRUSH_OPACITY);
 
          // Set up camera
          var camera = new PerspectiveCamera
@@ -120,20 +124,27 @@ namespace Lorenz
 
       private void OnMouseDown(object sender, MouseButtonEventArgs e)
       {
-         var p0 = new Point3D(-5, 0, 1);
-         var p1 = new Point3D( 5, 0, 1);
-         var p2 = new Point3D( 0, 5, 1);
-         var color = Color.FromRgb(0x0F, 0xF0, 0xF0);
-
-         var triangle = CreateTriangleModel(ref p0, ref p1, ref p2, ref color, DEFAULT_BRUSH_OPACITY);
-
          m_Angle += 10;
          var myRotateTransform3D = new RotateTransform3D();
          var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = m_Angle };
          myRotateTransform3D.Rotation = myAxisAngleRotation3D;
-         triangle.Transform = myRotateTransform3D;
 
-         m_Model3DGroup.Children.Add(triangle);
+
+         var doubleAnimation = new DoubleAnimation()
+            { 
+               From = 500,
+               To = 600,
+               Duration = TimeSpan.FromSeconds(2),
+               AutoReverse = true,
+               RepeatBehavior = RepeatBehavior.Forever
+            };
+         Storyboard.SetTargetName(doubleAnimation, "XCanvas");
+         //Storyboard.SetTargetProperty(doubleAnimation, new PropertyPath(XCanvas.Width));
+
+         var x = new ModelVisual3D {Content = m_pyramid};
+         m_i++;
+         x.Transform = new TranslateTransform3D(new Vector3D(5*Math.Sin(m_i), 10*Math.Cos(m_i), 0));
+         XViewport.Children.Add(x);
       }
 
       #endregion Mouse Events

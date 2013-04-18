@@ -5,13 +5,22 @@
         Loaded="OnLoaded"
         Closed="OnClosed"
         LocationChanged="OnLocationChanged">
+   <Window.Background>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+         <LinearGradientBrush.GradientStops>
+            <GradientStop Color="Black" Offset="0"/>
+            <GradientStop Color="#696988" Offset="1"/>
+         </LinearGradientBrush.GradientStops>
+      </LinearGradientBrush>
+   </Window.Background>
+   
    <DockPanel>
-
       <DockPanel DockPanel.Dock="Left">
-         <TextBox Name="XTextbox" HorizontalAlignment="Stretch" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Width="250" Background="GreenYellow"/>
+         <TextBox Name="XTextbox" HorizontalAlignment="Stretch" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Width="250" Background="Transparent" Foreground="White" FontWeight="Bold"/>
       </DockPanel>
-      <Canvas  Name="XCanvas" Background="DarkSeaGreen">
+      <Canvas Name="XCanvas">
          <Viewport3D Name="XViewport" Width="{Binding ElementName=XCanvas, Path=ActualWidth}" Height="{Binding ElementName=XCanvas, Path=ActualHeight}"/>
       </Canvas>
    </DockPanel>
+   
 </Window>
