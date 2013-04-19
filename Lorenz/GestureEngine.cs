@@ -8,6 +8,9 @@ namespace Lorenz
       private enum Mode
       {
          Mouse,
+        RotateX,
+        RotateY,
+        RotateZ,
          Idle
       };
 
@@ -38,6 +41,7 @@ namespace Lorenz
 
       public override void OnAlert(ref PXCMGesture.Alert data)
       {
+          m_Mode = Mode.Idle;
          m_UI.SendMessage(string.Format("ALERT: {0}", data.label));
 
          switch (data.label)
@@ -72,16 +76,16 @@ namespace Lorenz
             switch (data.label)
             {
                case PXCMGesture.Gesture.Label.LABEL_POSE_PEACE:
-                  //m_UI.SendMessage = "Click";
-                  MouseUtilities.Click(new Point(0, 0));
+                  //MouseUtilities.Click(new Point(0, 0));
+                    m_Mode = Mode.RotateX;
                   break;
                case PXCMGesture.Gesture.Label.LABEL_POSE_BIG5:
-                  m_Mode = Mode.Mouse;
-                  //m_UI.SendMessage = "MOUSE MODE";
+                  m_Mode = Mode.RotateY;
+                  break;
+               case PXCMGesture.Gesture.Label.LABEL_POSE_THUMB_UP:
+                  m_Mode = Mode.RotateZ;
                   break;
                default:
-                  //m_UI.SendMessage = "Right Click";
-                  MouseUtilities.RightClick(new Point(0, 0));
                   break;
             }
          }
@@ -104,6 +108,20 @@ namespace Lorenz
                   //m_UI.SendMessage = String.Format("New Mouse Position ({0}, {1})", xPos, yPos);
                   MouseUtilities.SetPosition((int)xPos, (int)yPos);
                }
+               switch (m_Mode)
+                {
+                        case Mode.Mouse:
+                        break;
+                       case Mode.RotateX:
+                        m_UI.RotateX();
+                        break;
+                       case Mode.RotateY:
+                        m_UI.RotateY();
+                        break;
+                       case Mode.RotateZ:
+                        m_UI.RotateZ();
+                        break;
+                }
             }
          }
 

@@ -48,6 +48,51 @@ namespace Lorenz
             });
       }
 
+      public void RotateX()
+      {
+          Dispatcher.BeginInvoke(
+             (Action)delegate
+             {
+                 var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(1, 0, 0), Angle = m_Angle += 1 };
+                 var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
+
+                 foreach (var visual in XViewport.Children)
+                 {
+                     visual.Transform = myRotateTransform3D;
+                 }
+             });
+      }
+
+      public void RotateY()
+      {
+          Dispatcher.BeginInvoke(
+             (Action)delegate
+             {
+                 var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = m_Angle += 1 };
+                 var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
+
+                 foreach (var visual in XViewport.Children)
+                 {
+                     visual.Transform = myRotateTransform3D;
+                 }
+             });
+      }
+
+      public void RotateZ()
+      {
+          Dispatcher.BeginInvoke(
+             (Action)delegate
+             {
+                 var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 0, 1), Angle = m_Angle += 1 };
+                 var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
+
+                 foreach (var visual in XViewport.Children)
+                 {
+                     visual.Transform = myRotateTransform3D;
+                 }
+             });
+      }
+
       #endregion Public Methods
 
       #region Initializaion
@@ -191,143 +236,6 @@ namespace Lorenz
       }
 
       #endregion Window Events
-       /*
-      #region Graphics
-       
-      private Model3DGroup CreateNewLorenzModel(ref Point3D pos, ref Color color1, ref Color color2, ref Color color3, ref Color color4, double opacity)
-      {
-         const int NUMPOINTS = 500;
-         const double STEP_SIZE = .01;
-
-         var lorenz = new Model3DGroup();
-
-          var x = new ModelVisual3D();
-          x.Children.Add(new ModelVisual3D());
-    	   
-          for (var i = 0; i < NUMPOINTS; i++)
-    	   {
-            lorenz.Children.Add(GetNewPyramindModel(ref pos, ref color1, ref color2, ref color3, ref color4, opacity));
-        	   pos = RK4Lorenz(pos, STEP_SIZE); 
-    	   }
-
-         return lorenz;
-      }
-
-      #endregion Graphics
-
-      #region Math
-  
-      private Point3D RK4Lorenz(Point3D pos, double dt)
-    {
-	   // Obtain and store first set of slopes
-	   Point3D f1 = Lorenz(pos);
-	
-	   // Compute next Euler position with first set of slopes and half time step
-	   Point3D xyz = Euler(pos, f1, dt/2);
-	
-	   // Obtain and store second set of slopes
-	   Point3D f2 = Lorenz(xyz);
-	
-	   // Compute next Euler position with second set of slopes and half time step
-	   xyz = Euler(pos, f2, dt/2);
-	
-	   // Obtain and store third set of slopes
-	   Point3D f3 = Lorenz(xyz);
-	
-	   // Compute next Euler position with third set of slopes and full time step
-	   xyz = Euler(pos, f3, dt);
-	
-	   // Obtain and store fourth set of slopes
-	   Point3D f4 = Lorenz(xyz);
-	
-	   // Compute weighted average of slopes according to Runge-Kutta fourth order algorithm
-	   Point3D rkSlope = new Point3D(f1.X/6 + f2.X/3 + f3.X/3 + f4.X/6,
-                                    f1.Y/6 + f2.Y/3 + f3.Y/3 + f4.Y/6,
-                                    f1.Z/6 + f2.Z/3 + f3.Z/3 + f4.Z/6);
-	
-	   // Return next position using Euler with Runge-Kutta slope
-	   return Euler(pos, rkSlope, dt);
-    }
-    
-	   private Point3D Lorenz(Point3D pos)
-	{
-      double sigma = 10;
-		double rho   = 28;
-		double beta  = 8/3;
-		
-		return new Point3D(sigma * (pos.Y - pos.X),
-				pos.X * (rho - pos.Z) - pos.Y, 
-				pos.X * pos.Y - beta * pos.Z);
-	}
-	
-	   private Point3D Euler(Point3D pos, Point3D slope, double dt)
-	   {
-		   return new Point3D(pos.X + slope.X * dt, pos.Y + slope.Y * dt, pos.Z + slope.Z * dt);
-	   }
-
-      #endregion Math
-
-      #region Private Methods
-
-
-      
-      #endregion Private Methods
-
-
-      private Model3DGroup GetNewPyramindModel(ref Point3D center, ref Color color1, ref Color color2, ref Color color3, ref Color color4, double opacity)
-      {
-          var pyramid = new Model3DGroup();
-
-          var p0 = new Point3D(center.X, center.Y, center.Z);
-          var p1 = new Point3D(center.X, center.Y + 1.0, center.Z + 0.5);
-          var p2 = new Point3D(center.X + 1.0, center.Y, center.Z + 1.0);
-          var p3 = new Point3D(center.X - 1.0, center.Y, center.Z + 1.0);
-
-          pyramid.Children.Add(CreateTriangleModel(ref p2, ref p1, ref p3, ref color1, opacity));
-          pyramid.Children.Add(CreateTriangleModel(ref p0, ref p1, ref p2, ref color2, opacity));
-          pyramid.Children.Add(CreateTriangleModel(ref p3, ref p1, ref p0, ref color3, opacity));
-          pyramid.Children.Add(CreateTriangleModel(ref p0, ref p2, ref p3, ref color4, opacity));
-
-          return pyramid;
-      }
-
-      private Model3DGroup CreateTriangleModel(ref Point3D p0, ref Point3D p1, ref Point3D p2, ref Color color, double opacity)
-      {
-          var mesh = new MeshGeometry3D();
-          mesh.Positions.Add(p0);
-          mesh.Positions.Add(p1);
-          mesh.Positions.Add(p2);
-
-          mesh.TriangleIndices.Add(0);
-          mesh.TriangleIndices.Add(1);
-          mesh.TriangleIndices.Add(2);
-
-          Vector3D normal = CalculateNormal(ref p0, ref p1, ref p2);
-          mesh.Normals.Add(normal);
-          mesh.Normals.Add(normal);
-          mesh.Normals.Add(normal);
-
-          normal = CalculateNormal(ref p1, ref p0, ref p2);
-          mesh.Normals.Add(normal);
-          mesh.Normals.Add(normal);
-          mesh.Normals.Add(normal);
-
-          var material = new DiffuseMaterial(new SolidColorBrush(color) { Opacity = opacity });
-          var model = new GeometryModel3D(mesh, material);
-          var group = new Model3DGroup();
-          group.Children.Add(model);
-
-          return group;
-      }
-
-      private Vector3D CalculateNormal(ref Point3D p0, ref Point3D p1, ref Point3D p2)
-      {
-          var v0 = new Vector3D(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);
-          var v1 = new Vector3D(p2.X - p1.X, p2.Y - p1.Y, p2.Z - p1.Z);
-          return Vector3D.CrossProduct(v0, v1);
-      }
-        * 
-        * */
    }
 }
 
