@@ -28,12 +28,11 @@ namespace Lorenz
       #region Private Data
       private Model3DGroup m_Model3DGroup;
       private ModelVisual3D m_ModelVisual3D;
-      private Model3DGroup m_Lorenz;
+      private LorenzVisual m_Lorenz;
       private int m_Angle;
       private Thread m_PipelineThread;
       private GestureEngine m_GestureEngine;
-      private Collection<MeshGeometry3D> m_Geometry;
-      private Model3DGroup m_pyramid;
+
       private double m_i;
       #endregion Private Data
 
@@ -66,8 +65,6 @@ namespace Lorenz
          // Declare scene objects.
          m_Model3DGroup = new Model3DGroup();
          m_ModelVisual3D = new ModelVisual3D();
-         var pos = new Point3D(0, 0, 0);
-         m_pyramid = GetNewPyramindModel(ref pos, ref RED, ref GREEN, ref BLUE, ref WHITE, DEFAULT_BRUSH_OPACITY);
 
          // Set up camera
          var camera = new PerspectiveCamera
@@ -91,6 +88,8 @@ namespace Lorenz
             Color = AMBIENT_LIGHT
          };
          m_Model3DGroup.Children.Add(ambientLight);
+
+         
       }
 
       private void InitializeGestureEngine()
@@ -111,12 +110,13 @@ namespace Lorenz
          var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
          m_Model3DGroup.Transform = myRotateTransform3D;
 
+          
          int i = 0;
-         foreach (var pyramid in m_Lorenz.Children)
+         foreach (var item in XViewport.Children)
          {
             if (i%2 == 0)
             {
-               pyramid.Transform = myRotateTransform3D;   
+               item.Transform = myRotateTransform3D;   
             }
             i++;
          }
@@ -141,10 +141,10 @@ namespace Lorenz
          Storyboard.SetTargetName(doubleAnimation, "XCanvas");
          //Storyboard.SetTargetProperty(doubleAnimation, new PropertyPath(XCanvas.Width));
 
-         var x = new ModelVisual3D {Content = m_pyramid};
+         var glyph = new Glyph();
          m_i++;
-         x.Transform = new TranslateTransform3D(new Vector3D(5*Math.Sin(m_i), 10*Math.Cos(m_i), 0));
-         XViewport.Children.Add(x);
+         glyph.Transform = new TranslateTransform3D(new Vector3D(5 * Math.Sin(m_i), 10 * Math.Cos(m_i), 0));
+         XViewport.Children.Add(glyph);
       }
 
       #endregion Mouse Events
@@ -158,9 +158,11 @@ namespace Lorenz
          var position = new Point3D(-100, -100, -500);
 
          // Add the geometry model to the viewport
-         m_Lorenz = CreateNewLorenzModel(ref position, ref RED, ref GREEN, ref BLUE, ref WHITE, DEFAULT_BRUSH_OPACITY);
-         m_Model3DGroup.Children.Add(m_Lorenz);
+         //m_Lorenz = CreateNewLorenzModel(ref position, ref RED, ref GREEN, ref BLUE, ref WHITE, DEFAULT_BRUSH_OPACITY);
+         //m_Model3DGroup.Children.Add();
          m_ModelVisual3D.Content = m_Model3DGroup;
+          m_Lorenz = new LorenzVisual();
+         XViewport.Children.Add(m_Lorenz);
          XViewport.Children.Add(m_ModelVisual3D);
 
          // Wire up mouse events
@@ -180,13 +182,18 @@ namespace Lorenz
 
       private void OnLocationChanged(object sender, EventArgs e)
       {
-         m_GestureEngine.SetOrigin(GetCanvasCenter());// (MouseUtilities.GetPosition(this));
+         m_GestureEngine.SetOrigin(GetCanvasCenter());
+      }
+
+      private Point GetCanvasCenter()
+      {
+          return new Point(Left + XCanvas.ActualWidth / 2 + XTextbox.Width, Top + XCanvas.ActualHeight / 2);
       }
 
       #endregion Window Events
-
+       /*
       #region Graphics
-
+       
       private Model3DGroup CreateNewLorenzModel(ref Point3D pos, ref Color color1, ref Color color2, ref Color color3, ref Color color4, double opacity)
       {
          const int NUMPOINTS = 500;
@@ -194,66 +201,16 @@ namespace Lorenz
 
          var lorenz = new Model3DGroup();
 
-    	   for (var i = 0; i < NUMPOINTS; i++)
+          var x = new ModelVisual3D();
+          x.Children.Add(new ModelVisual3D());
+    	   
+          for (var i = 0; i < NUMPOINTS; i++)
     	   {
             lorenz.Children.Add(GetNewPyramindModel(ref pos, ref color1, ref color2, ref color3, ref color4, opacity));
         	   pos = RK4Lorenz(pos, STEP_SIZE); 
     	   }
 
          return lorenz;
-      }
-
-      private Model3DGroup GetNewPyramindModel(ref Point3D center, ref Color color1, ref Color color2, ref Color color3, ref Color color4, double opacity)
-      {
-         var pyramid = new Model3DGroup();
-
-         var p0 = new Point3D(center.X, center.Y, center.Z);
-         var p1 = new Point3D(center.X, center.Y + 1.0, center.Z + 0.5);
-         var p2 = new Point3D(center.X + 1.0, center.Y, center.Z + 1.0);
-         var p3 = new Point3D(center.X - 1.0, center.Y, center.Z + 1.0);
-
-         pyramid.Children.Add(CreateTriangleModel(ref p2, ref p1, ref p3, ref color1, opacity));          
-         pyramid.Children.Add(CreateTriangleModel(ref p0, ref p1, ref p2, ref color2, opacity));
-         pyramid.Children.Add(CreateTriangleModel(ref p3, ref p1, ref p0, ref color3, opacity));
-         pyramid.Children.Add(CreateTriangleModel(ref p0, ref p2, ref p3, ref color4, opacity));         
-
-         return pyramid;
-      }
-
-      private Model3DGroup CreateTriangleModel(ref Point3D p0, ref Point3D p1, ref Point3D p2, ref Color color, double opacity)
-      {
-         var mesh = new MeshGeometry3D();
-         mesh.Positions.Add(p0);
-         mesh.Positions.Add(p1);
-         mesh.Positions.Add(p2);
-
-         mesh.TriangleIndices.Add(0);
-         mesh.TriangleIndices.Add(1);
-         mesh.TriangleIndices.Add(2);
-
-         Vector3D normal = CalculateNormal(ref p0, ref p1, ref p2);
-         mesh.Normals.Add(normal);
-         mesh.Normals.Add(normal);
-         mesh.Normals.Add(normal);
-
-         normal = CalculateNormal(ref p1, ref p0, ref p2);
-         mesh.Normals.Add(normal);
-         mesh.Normals.Add(normal);
-         mesh.Normals.Add(normal);
-
-         var material = new DiffuseMaterial(new SolidColorBrush(color) { Opacity = opacity });
-         var model = new GeometryModel3D(mesh, material);
-         var group = new Model3DGroup();
-         group.Children.Add(model);
-
-         return group;
-      }
-
-      private Vector3D CalculateNormal(ref Point3D p0, ref Point3D p1, ref Point3D p2)
-      {
-         var v0 = new Vector3D(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);
-         var v1 = new Vector3D(p2.X - p1.X, p2.Y - p1.Y, p2.Z - p1.Z);
-         return Vector3D.CrossProduct(v0, v1);
       }
 
       #endregion Graphics
@@ -312,12 +269,65 @@ namespace Lorenz
 
       #region Private Methods
 
-      private Point GetCanvasCenter()
-      {
-         return new Point(Left + XCanvas.ActualWidth/2 + XTextbox.Width, Top + XCanvas.ActualHeight/2);
-      }
+
       
       #endregion Private Methods
+
+
+      private Model3DGroup GetNewPyramindModel(ref Point3D center, ref Color color1, ref Color color2, ref Color color3, ref Color color4, double opacity)
+      {
+          var pyramid = new Model3DGroup();
+
+          var p0 = new Point3D(center.X, center.Y, center.Z);
+          var p1 = new Point3D(center.X, center.Y + 1.0, center.Z + 0.5);
+          var p2 = new Point3D(center.X + 1.0, center.Y, center.Z + 1.0);
+          var p3 = new Point3D(center.X - 1.0, center.Y, center.Z + 1.0);
+
+          pyramid.Children.Add(CreateTriangleModel(ref p2, ref p1, ref p3, ref color1, opacity));
+          pyramid.Children.Add(CreateTriangleModel(ref p0, ref p1, ref p2, ref color2, opacity));
+          pyramid.Children.Add(CreateTriangleModel(ref p3, ref p1, ref p0, ref color3, opacity));
+          pyramid.Children.Add(CreateTriangleModel(ref p0, ref p2, ref p3, ref color4, opacity));
+
+          return pyramid;
+      }
+
+      private Model3DGroup CreateTriangleModel(ref Point3D p0, ref Point3D p1, ref Point3D p2, ref Color color, double opacity)
+      {
+          var mesh = new MeshGeometry3D();
+          mesh.Positions.Add(p0);
+          mesh.Positions.Add(p1);
+          mesh.Positions.Add(p2);
+
+          mesh.TriangleIndices.Add(0);
+          mesh.TriangleIndices.Add(1);
+          mesh.TriangleIndices.Add(2);
+
+          Vector3D normal = CalculateNormal(ref p0, ref p1, ref p2);
+          mesh.Normals.Add(normal);
+          mesh.Normals.Add(normal);
+          mesh.Normals.Add(normal);
+
+          normal = CalculateNormal(ref p1, ref p0, ref p2);
+          mesh.Normals.Add(normal);
+          mesh.Normals.Add(normal);
+          mesh.Normals.Add(normal);
+
+          var material = new DiffuseMaterial(new SolidColorBrush(color) { Opacity = opacity });
+          var model = new GeometryModel3D(mesh, material);
+          var group = new Model3DGroup();
+          group.Children.Add(model);
+
+          return group;
+      }
+
+      private Vector3D CalculateNormal(ref Point3D p0, ref Point3D p1, ref Point3D p2)
+      {
+          var v0 = new Vector3D(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);
+          var v1 = new Vector3D(p2.X - p1.X, p2.Y - p1.Y, p2.Z - p1.Z);
+          return Vector3D.CrossProduct(v0, v1);
+      }
+        * 
+        * */
    }
 }
 
