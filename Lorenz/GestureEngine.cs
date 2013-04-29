@@ -15,9 +15,7 @@ namespace Lorenz
          RotateZ,
          Idle
       };
-
       #endregion Enumerations
-
 
       #region Private Data
       
@@ -32,6 +30,9 @@ namespace Lorenz
       private readonly MainWindow m_UI;
 
       private readonly PXCMGesture.GeoNode[] m_Data;
+
+      private PXCMPoint3DF32 m_lastPos;
+
       #endregion Private Data
 
       public GestureEngine(MainWindow mainWindow)
@@ -41,12 +42,12 @@ namespace Lorenz
          m_NumFrames = 0;
          m_DeviceLost = false;
          m_UI = mainWindow;
+         m_lastPos = new PXCMPoint3DF32();
          m_Data = new PXCMGesture.GeoNode[5];
       }
 
       public override void OnAlert(ref PXCMGesture.Alert data)
       {
-          m_Mode = Mode.Idle;
          m_UI.SendMessage(string.Format("ALERT: {0}", data.label));
 
          switch (data.label)
@@ -96,22 +97,29 @@ namespace Lorenz
 
          if (status >= pxcmStatus.PXCM_STATUS_NO_ERROR)
          {
-            if (m_Data[0].confidence > 95)
+            if (m_Data[0].confidence > 90)
             {
                 switch (m_Mode)
                 {
+                      /*
                     case Mode.Mouse:
                         var xPos = m_XOrigin - m_Data[0].positionImage.x + m_InitialHandPos.X;
                         var yPos = m_YOrigin + m_Data[0].positionImage.y - m_InitialHandPos.Y;
                         MouseUtilities.SetPosition((int)xPos, (int)yPos);
                         break;
+                       */
                     case Mode.RotateX:
+                        m_UI.SendMessage("X");
                         m_UI.Rotate(new Vector3D(1, 0, 0), 1);
                         break;
                     case Mode.RotateY:
-                        m_UI.Rotate(new Vector3D(0, 1, 0), 1);
+                        m_UI.Rotate(new Vector3D(m_lastPos.y - m_Data[1].positionImage.y, m_lastPos.x - m_Data[1].positionImage.x, 0), 1);
+                        m_lastPos = m_Data[0].positionImage;
+                        //m_UI.SendMessage("Y");
+                        //m_UI.Rotate(new Vector3D(0, 1, 0), 1);
                         break;
                     case Mode.RotateZ:
+                        m_UI.SendMessage("Z");
                         m_UI.Rotate(new Vector3D(0, 0, 1), 1);
                         break;
                 }
