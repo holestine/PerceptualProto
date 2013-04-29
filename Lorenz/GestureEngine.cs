@@ -52,7 +52,7 @@ namespace Lorenz
                break;
             default:
                //m_UI.SendMessage = "Right Click";
-               MouseUtilities.RightClick(new Point(0, 0));
+               //MouseUtilities.RightClick(new Point(0, 0));
                break;
          }
       }
@@ -98,27 +98,24 @@ namespace Lorenz
 
          if (status >= pxcmStatus.PXCM_STATUS_NO_ERROR)
          {
-            if (m_Data[0].confidence > 90)
+             if (m_Data[0].confidence > 95)
             {
                // TODO: Improve mouse positioning
-               if (m_Mode == Mode.Mouse)
-               {
-                  var xPos = m_XOrigin - m_Data[0].positionImage.x + m_InitialHandPos.X;
-                  var yPos = m_YOrigin + m_Data[0].positionImage.y - m_InitialHandPos.Y;
-                  //m_UI.SendMessage = String.Format("New Mouse Position ({0}, {1})", xPos, yPos);
-                  MouseUtilities.SetPosition((int)xPos, (int)yPos);
-               }
-               switch (m_Mode)
+                switch (m_Mode)
                 {
-                        case Mode.Mouse:
+                    case Mode.Mouse:
+                        var xPos = m_XOrigin - m_Data[0].positionImage.x + m_InitialHandPos.X;
+                        var yPos = m_YOrigin + m_Data[0].positionImage.y - m_InitialHandPos.Y;
+                        //m_UI.SendMessage = String.Format("New Mouse Position ({0}, {1})", xPos, yPos);
+                        MouseUtilities.SetPosition((int)xPos, (int)yPos);
                         break;
-                       case Mode.RotateX:
+                    case Mode.RotateX:
                         m_UI.RotateX();
                         break;
-                       case Mode.RotateY:
+                    case Mode.RotateY:
                         m_UI.RotateY();
                         break;
-                       case Mode.RotateZ:
+                    case Mode.RotateZ:
                         m_UI.RotateZ();
                         break;
                 }

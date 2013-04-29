@@ -33,7 +33,9 @@ namespace Lorenz
       private Thread m_PipelineThread;
       private GestureEngine m_GestureEngine;
 
-      private double m_i;
+      private double m_XRotation;
+      private double m_YRotation;
+      private double m_ZRotation;
       #endregion Private Data
 
       #region Public Methods
@@ -53,12 +55,17 @@ namespace Lorenz
           Dispatcher.BeginInvoke(
              (Action)delegate
              {
-                 var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(1, 0, 0), Angle = m_Angle += 1 };
-                 var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
-
+                 m_XRotation+=.1;
+                 var xRotation = new AxisAngleRotation3D { Axis = new Vector3D(1, 0, 0), Angle = m_XRotation };
+                 var transform = new RotateTransform3D { Rotation = xRotation };
+                 var t = new Transform3DGroup();
+                 
+                 
                  foreach (var visual in XViewport.Children)
                  {
-                     visual.Transform = myRotateTransform3D;
+                     t.Children.Add(visual.Transform);
+                     t.Children.Add(transform);
+                     visual.Transform = t;
                  }
              });
       }
@@ -68,13 +75,18 @@ namespace Lorenz
           Dispatcher.BeginInvoke(
              (Action)delegate
              {
-                 var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = m_Angle += 1 };
-                 var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
+                 m_YRotation+=.1;
+                 var yRotation = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = m_YRotation };
+                 var transform = new RotateTransform3D { Rotation = yRotation };
+                  var t = new Transform3DGroup();
 
-                 foreach (var visual in XViewport.Children)
-                 {
-                     visual.Transform = myRotateTransform3D;
-                 }
+
+                  foreach (var visual in XViewport.Children)
+                  {
+                      t.Children.Add(visual.Transform);
+                      t.Children.Add(transform);
+                      visual.Transform = t;
+                  }
              });
       }
 
@@ -83,12 +95,17 @@ namespace Lorenz
           Dispatcher.BeginInvoke(
              (Action)delegate
              {
-                 var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 0, 1), Angle = m_Angle += 1 };
-                 var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
+                 m_ZRotation+=.1;
+                 var zRotation = new AxisAngleRotation3D { Axis = new Vector3D(0, 0, 1), Angle = m_ZRotation };
+                 var transform = new RotateTransform3D { Rotation = zRotation };
+                 var t = new Transform3DGroup();
+
 
                  foreach (var visual in XViewport.Children)
                  {
-                     visual.Transform = myRotateTransform3D;
+                     t.Children.Add(visual.Transform);
+                     t.Children.Add(transform);
+                     visual.Transform = t;
                  }
              });
       }
@@ -106,7 +123,9 @@ namespace Lorenz
       private void InitializeGraphics()
       {
          m_Angle = 0;
-         m_i = 0;
+         m_XRotation = 0;
+         m_YRotation = 0;
+         m_ZRotation = 0;
          // Declare scene objects.
          m_Model3DGroup = new Model3DGroup();
          m_ModelVisual3D = new ModelVisual3D();
@@ -186,10 +205,11 @@ namespace Lorenz
          Storyboard.SetTargetName(doubleAnimation, "XCanvas");
          //Storyboard.SetTargetProperty(doubleAnimation, new PropertyPath(XCanvas.Width));
 
-         var glyph = new Glyph();
-         m_i++;
-         glyph.Transform = new TranslateTransform3D(new Vector3D(5 * Math.Sin(m_i), 10 * Math.Cos(m_i), 0));
-         XViewport.Children.Add(glyph);
+         var glyph = new Glyph
+                {
+                    Transform = new TranslateTransform3D(new Vector3D(5*Math.Sin(m_XRotation), 10*Math.Cos(m_YRotation), Math.Cos(m_ZRotation)))
+                };
+          XViewport.Children.Add(glyph);
       }
 
       #endregion Mouse Events
