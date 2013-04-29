@@ -25,17 +25,23 @@ namespace Lorenz
       private Color AMBIENT_LIGHT = Color.FromRgb(0x40, 0x40, 0x40);
       #endregion Constants
 
+      #region Enumerations
+      private enum State
+      {
+         Rotating,
+         Idle
+      };
+      #endregion Enumerations
+
       #region Private Data
       private Model3DGroup m_Model3DGroup;
       private ModelVisual3D m_ModelVisual3D;
       private LorenzVisual m_Lorenz;
-      private int m_Angle;
       private Thread m_PipelineThread;
       private GestureEngine m_GestureEngine;
 
-      private double m_XRotation;
-      private double m_YRotation;
-      private double m_ZRotation;
+      private State m_State;
+
       #endregion Private Data
 
       #region Public Methods
@@ -50,64 +56,23 @@ namespace Lorenz
             });
       }
 
-      public void RotateX()
+      public void Rotate(Vector3D axis, double angle)
       {
-          Dispatcher.BeginInvoke(
-             (Action)delegate
-             {
-                 m_XRotation+=.1;
-                 var xRotation = new AxisAngleRotation3D { Axis = new Vector3D(1, 0, 0), Angle = m_XRotation };
-                 var transform = new RotateTransform3D { Rotation = xRotation };
-                 var t = new Transform3DGroup();
-                 
-                 
-                 foreach (var visual in XViewport.Children)
-                 {
-                     t.Children.Add(visual.Transform);
-                     t.Children.Add(transform);
-                     visual.Transform = t;
-                 }
-             });
-      }
+         if (m_State != State.Idle) return;
 
-      public void RotateY()
-      {
-          Dispatcher.BeginInvoke(
-             (Action)delegate
-             {
-                 m_YRotation+=.1;
-                 var yRotation = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = m_YRotation };
-                 var transform = new RotateTransform3D { Rotation = yRotation };
+         m_State = State.Rotating;
+
+         Dispatcher.BeginInvoke(
+            (Action) delegate
+               {
+                  var rotation = new AxisAngleRotation3D {Axis = axis, Angle = angle};
+                  var transform = new RotateTransform3D {Rotation = rotation};
                   var t = new Transform3DGroup();
-
-
-                  foreach (var visual in XViewport.Children)
-                  {
-                      t.Children.Add(visual.Transform);
-                      t.Children.Add(transform);
-                      visual.Transform = t;
-                  }
-             });
-      }
-
-      public void RotateZ()
-      {
-          Dispatcher.BeginInvoke(
-             (Action)delegate
-             {
-                 m_ZRotation+=.1;
-                 var zRotation = new AxisAngleRotation3D { Axis = new Vector3D(0, 0, 1), Angle = m_ZRotation };
-                 var transform = new RotateTransform3D { Rotation = zRotation };
-                 var t = new Transform3DGroup();
-
-
-                 foreach (var visual in XViewport.Children)
-                 {
-                     t.Children.Add(visual.Transform);
-                     t.Children.Add(transform);
-                     visual.Transform = t;
-                 }
-             });
+                  t.Children.Add(m_Lorenz.Transform);
+                  t.Children.Add(transform);
+                  m_Lorenz.Transform = t;
+                  m_State = State.Idle;
+               });
       }
 
       #endregion Public Methods
@@ -122,10 +87,6 @@ namespace Lorenz
 
       private void InitializeGraphics()
       {
-         m_Angle = 0;
-         m_XRotation = 0;
-         m_YRotation = 0;
-         m_ZRotation = 0;
          // Declare scene objects.
          m_Model3DGroup = new Model3DGroup();
          m_ModelVisual3D = new ModelVisual3D();
@@ -158,6 +119,7 @@ namespace Lorenz
 
       private void InitializeGestureEngine()
       {
+         m_State = State.Idle;
          m_GestureEngine = new GestureEngine(this);
          m_PipelineThread = new Thread(m_GestureEngine.Start);
          m_PipelineThread.Start();
@@ -170,7 +132,7 @@ namespace Lorenz
       private void OnMouseEnter(object sender, MouseEventArgs e)
       {
          // Set selected item
-         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 0, 1), Angle = m_Angle += 10 };
+         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 0, 1), Angle = 10 };
          var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
          m_Model3DGroup.Transform = myRotateTransform3D;
 
@@ -188,12 +150,11 @@ namespace Lorenz
 
       private void OnMouseDown(object sender, MouseButtonEventArgs e)
       {
-         m_Angle += 10;
          var myRotateTransform3D = new RotateTransform3D();
-         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = m_Angle };
+         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = 20 };
          myRotateTransform3D.Rotation = myAxisAngleRotation3D;
 
-
+         /*
          var doubleAnimation = new DoubleAnimation()
             { 
                From = 500,
@@ -204,10 +165,10 @@ namespace Lorenz
             };
          Storyboard.SetTargetName(doubleAnimation, "XCanvas");
          //Storyboard.SetTargetProperty(doubleAnimation, new PropertyPath(XCanvas.Width));
-
+         */
          var glyph = new Glyph
                 {
-                    Transform = new TranslateTransform3D(new Vector3D(5*Math.Sin(m_XRotation), 10*Math.Cos(m_YRotation), Math.Cos(m_ZRotation)))
+                    Transform = new TranslateTransform3D(new Vector3D(5*Math.Sin(0), 10*Math.Cos(0), Math.Cos(0)))
                 };
           XViewport.Children.Add(glyph);
       }
@@ -223,10 +184,8 @@ namespace Lorenz
          var position = new Point3D(-100, -100, -500);
 
          // Add the geometry model to the viewport
-         //m_Lorenz = CreateNewLorenzModel(ref position, ref RED, ref GREEN, ref BLUE, ref WHITE, DEFAULT_BRUSH_OPACITY);
-         //m_Model3DGroup.Children.Add();
          m_ModelVisual3D.Content = m_Model3DGroup;
-          m_Lorenz = new LorenzVisual();
+         m_Lorenz = new LorenzVisual();
          XViewport.Children.Add(m_Lorenz);
          XViewport.Children.Add(m_ModelVisual3D);
 

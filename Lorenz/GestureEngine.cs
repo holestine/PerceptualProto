@@ -1,18 +1,23 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Media.Media3D;
 
 namespace Lorenz
 {
    sealed class GestureEngine : UtilMPipeline
    {
+      #region Enumerations
       private enum Mode
       {
          Mouse,
-        RotateX,
-        RotateY,
-        RotateZ,
+         RotateX,
+         RotateY,
+         RotateZ,
          Idle
       };
+
+      #endregion Enumerations
+
 
       #region Private Data
       
@@ -48,21 +53,15 @@ namespace Lorenz
          {
             case PXCMGesture.Alert.Label.LABEL_GEONODE_INACTIVE:
                m_Mode = Mode.Idle;
-               //m_UI.SendMessage = "IDLE MODE";
                break;
             default:
-               //m_UI.SendMessage = "Right Click";
-               //MouseUtilities.RightClick(new Point(0, 0));
                break;
          }
       }
 
       public override void OnGesture(ref PXCMGesture.Gesture data)
       {
-         if (data.active)
-         {
-            m_UI.SendMessage(string.Format("GESTURE: {0}", data.label));
-         }
+         m_UI.SendMessage(string.Format("GESTURE: {0}", data.label));
 
          PXCMGesture gesture = QueryGesture();
          PXCMGesture.GeoNode ndata;
@@ -76,8 +75,7 @@ namespace Lorenz
             switch (data.label)
             {
                case PXCMGesture.Gesture.Label.LABEL_POSE_PEACE:
-                  //MouseUtilities.Click(new Point(0, 0));
-                    m_Mode = Mode.RotateX;
+                  m_Mode = Mode.RotateX;
                   break;
                case PXCMGesture.Gesture.Label.LABEL_POSE_BIG5:
                   m_Mode = Mode.RotateY;
@@ -98,25 +96,23 @@ namespace Lorenz
 
          if (status >= pxcmStatus.PXCM_STATUS_NO_ERROR)
          {
-             if (m_Data[0].confidence > 95)
+            if (m_Data[0].confidence > 95)
             {
-               // TODO: Improve mouse positioning
                 switch (m_Mode)
                 {
                     case Mode.Mouse:
                         var xPos = m_XOrigin - m_Data[0].positionImage.x + m_InitialHandPos.X;
                         var yPos = m_YOrigin + m_Data[0].positionImage.y - m_InitialHandPos.Y;
-                        //m_UI.SendMessage = String.Format("New Mouse Position ({0}, {1})", xPos, yPos);
                         MouseUtilities.SetPosition((int)xPos, (int)yPos);
                         break;
                     case Mode.RotateX:
-                        m_UI.RotateX();
+                        m_UI.Rotate(new Vector3D(1, 0, 0), 1);
                         break;
                     case Mode.RotateY:
-                        m_UI.RotateY();
+                        m_UI.Rotate(new Vector3D(0, 1, 0), 1);
                         break;
                     case Mode.RotateZ:
-                        m_UI.RotateZ();
+                        m_UI.Rotate(new Vector3D(0, 0, 1), 1);
                         break;
                 }
             }
