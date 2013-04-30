@@ -10,9 +10,9 @@ namespace Lorenz
       private enum Mode
       {
          Mouse,
-         RotateX,
-         RotateY,
-         RotateZ,
+         Rotate,
+         Translate,
+         Scale,
          Idle
       };
       #endregion Enumerations
@@ -29,7 +29,7 @@ namespace Lorenz
       private Point m_InitialHandPos = new Point(0,0);
       private readonly MainWindow m_UI;
 
-      private readonly PXCMGesture.GeoNode[] m_Data;
+      private readonly PXCMGesture.GeoNode[] m_Data = new PXCMGesture.GeoNode[5];
 
       private PXCMPoint3DF32 m_lastPos;
 
@@ -43,7 +43,6 @@ namespace Lorenz
          m_DeviceLost = false;
          m_UI = mainWindow;
          m_lastPos = new PXCMPoint3DF32();
-         m_Data = new PXCMGesture.GeoNode[5];
       }
 
       public override void OnAlert(ref PXCMGesture.Alert data)
@@ -76,13 +75,13 @@ namespace Lorenz
             switch (data.label)
             {
                case PXCMGesture.Gesture.Label.LABEL_POSE_PEACE:
-                  m_Mode = Mode.RotateX;
+                  m_Mode = Mode.Translate;
                   break;
                case PXCMGesture.Gesture.Label.LABEL_POSE_BIG5:
-                  m_Mode = Mode.RotateY;
+                  m_Mode = Mode.Rotate;
                   break;
                case PXCMGesture.Gesture.Label.LABEL_POSE_THUMB_UP:
-                  m_Mode = Mode.RotateZ;
+                  m_Mode = Mode.Scale;
                   break;
                default:
                   break;
@@ -92,37 +91,41 @@ namespace Lorenz
 
       public override bool OnNewFrame()
       {
+
+
          PXCMGesture gesture = QueryGesture();
          pxcmStatus status = gesture.QueryNodeData(0, PXCMGesture.GeoNode.Label.LABEL_BODY_HAND_PRIMARY | PXCMGesture.GeoNode.Label.LABEL_FINGER_INDEX, m_Data);
+         PXCMPoint3DF32 center;
+         center.x = 120;
+         center.y = 90;
 
          if (status >= pxcmStatus.PXCM_STATUS_NO_ERROR)
          {
             if (m_Data[0].confidence > 90)
             {
-                switch (m_Mode)
-                {
-                      /*
-                    case Mode.Mouse:
-                        var xPos = m_XOrigin - m_Data[0].positionImage.x + m_InitialHandPos.X;
-                        var yPos = m_YOrigin + m_Data[0].positionImage.y - m_InitialHandPos.Y;
-                        MouseUtilities.SetPosition((int)xPos, (int)yPos);
-                        break;
-                       */
-                    case Mode.RotateX:
-                        m_UI.SendMessage("X");
-                        m_UI.Rotate(new Vector3D(1, 0, 0), 1);
-                        break;
-                    case Mode.RotateY:
-                        m_UI.Rotate(new Vector3D(m_lastPos.y - m_Data[1].positionImage.y, m_lastPos.x - m_Data[1].positionImage.x, 0), 1);
-                        m_lastPos = m_Data[0].positionImage;
-                        //m_UI.SendMessage("Y");
-                        //m_UI.Rotate(new Vector3D(0, 1, 0), 1);
-                        break;
-                    case Mode.RotateZ:
-                        m_UI.SendMessage("Z");
-                        m_UI.Rotate(new Vector3D(0, 0, 1), 1);
-                        break;
-                }
+               switch (m_Mode)
+               {
+                  case Mode.Rotate:
+                     m_UI.SendMessage("Rotate");
+                     double angle = new Vector3D(center.y - m_Data[1].positionImage.y, center.x - m_Data[1].positionImage.x, 0).Length/100;
+                     var axis = new Vector3D(center.y - m_Data[1].positionImage.y, center.x - m_Data[1].positionImage.x, 0);
+                     m_UI.Rotate(axis, angle);
+                     
+                     break;/*
+                  case Mode.Mouse:
+                     var xPos = m_XOrigin - m_Data[0].positionImage.x + m_InitialHandPos.X;
+                     var yPos = m_YOrigin + m_Data[0].positionImage.y - m_InitialHandPos.Y;
+                     MouseUtilities.SetPosition((int)xPos, (int)yPos);
+                     break;
+                  case Mode.Translate:
+                     m_UI.SendMessage("Y");
+                     m_UI.Rotate(new Vector3D(0, 1, 0), 1);
+                     break;
+                  case Mode.Scale:
+                     m_UI.SendMessage("Z");
+                     m_UI.Rotate(new Vector3D(0, 0, 1), 1);
+                     break;*/
+               }
             }
          }
 
