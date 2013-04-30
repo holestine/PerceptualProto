@@ -21,15 +21,16 @@ namespace Lorenz
       private Color GREEN = Color.FromRgb(0x00, 0xFF, 0x00);
       private Color BLUE = Color.FromRgb(0x00, 0x00, 0xFF);
       private Color WHITE = Color.FromRgb(0xFF, 0xFF, 0xFF);
-      private Color DIRECTION_LIGHT = Color.FromRgb(0xA0, 0xA0, 0xA0);
-      private Color AMBIENT_LIGHT = Color.FromRgb(0x40, 0x40, 0x40);
+      private Color AMBIENT_LIGHT = Color.FromRgb(0x30, 0x30, 0x30);
+      private Color POINT_LIGHT = Color.FromRgb(0xDD, 0xDD, 0xDD);
       #endregion Constants
 
       #region Enumerations
       private enum State
       {
          Rotating,
-         Idle
+         Idle,
+         Animating
       };
       #endregion Enumerations
 
@@ -75,6 +76,29 @@ namespace Lorenz
                });
       }
 
+      public void Animate(Vector3D axis, double angle)
+      {
+         if (m_State != State.Idle) return;
+
+         m_State = State.Animating;
+
+         Dispatcher.BeginInvoke(
+            (Action)delegate
+               {
+                m_Lorenz.Recalculate(new Point3D(m_Lorenz.StartingPoint.X + 1, m_Lorenz.StartingPoint.Y + 1, m_Lorenz.StartingPoint.Z + 1));
+
+                  /*
+               var rotation = new AxisAngleRotation3D { Axis = axis, Angle = angle };
+               var transform = new RotateTransform3D { Rotation = rotation };
+               var t = new Transform3DGroup();
+               t.Children.Add(m_Lorenz.Transform);
+               t.Children.Add(transform);
+               m_Lorenz.Transform = t;
+                   */
+               m_State = State.Idle;
+            });
+      }
+
       #endregion Public Methods
 
       #region Initializaion
@@ -94,27 +118,25 @@ namespace Lorenz
          // Set up camera
          var camera = new PerspectiveCamera
          {
-            Position = new Point3D(1, 5, -20),
+            Position = new Point3D(1, 5, -40),
             LookDirection = new Vector3D(-1, -5, 20),
-            FieldOfView = 90
+            FieldOfView = 120
          };
          XViewport.Camera = camera;
 
          // Set up lights
-         var light = new DirectionalLight
-         {
-            Color = DIRECTION_LIGHT,
-            Direction = new Vector3D(0, 0, 1)
-         };
-         m_Model3DGroup.Children.Add(light);
-         
          var ambientLight = new AmbientLight
          {
             Color = AMBIENT_LIGHT
          };
          m_Model3DGroup.Children.Add(ambientLight);
 
-         
+         var pointLight = new PointLight
+            {
+               Color = POINT_LIGHT,
+               Position = new Point3D(10, 20, -10)
+            };
+         m_Model3DGroup.Children.Add(pointLight);
       }
 
       private void InitializeGestureEngine()
@@ -181,14 +203,15 @@ namespace Lorenz
       {
          m_GestureEngine.SetOrigin(GetCanvasCenter());
 
-         var position = new Point3D(-100, -100, -500);
-
          // Add the geometry model to the viewport
          m_ModelVisual3D.Content = m_Model3DGroup;
-         m_Lorenz = new LorenzVisual();
-         XViewport.Children.Add(m_Lorenz);
          XViewport.Children.Add(m_ModelVisual3D);
 
+         m_Lorenz = new LorenzVisual(new Point3D(-75, 75, 100));
+         XViewport.Children.Add(m_Lorenz);
+         //XViewport.Children.Add(new LorenzVisual(new Point3D(50, -30, 20), Color.FromRgb(0x00, 0xFF, 0x00)));
+         //XViewport.Children.Add(new LorenzVisual(new Point3D(-50, 50, -10), Color.FromRgb(0x00, 0x00, 0xFF)));
+         
          // Wire up mouse events
          XViewport.MouseDown += OnMouseDown;
          XViewport.MouseEnter += OnMouseEnter;

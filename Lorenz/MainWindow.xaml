@@ -11,22 +11,21 @@
             <GradientStop Color="Black" Offset="0"/>
             <GradientStop Color="#696988" Offset=".9"/>
             <GradientStop Color="#FF0E550E" Offset="1"/>
-        </LinearGradientBrush.GradientStops>
+         </LinearGradientBrush.GradientStops>
       </LinearGradientBrush>
    </Window.Background>
-   
+
    <DockPanel>
-        
-            <DockPanel DockPanel.Dock="Left">
+      <DockPanel DockPanel.Dock="Left">
          <TextBox Name="XTextbox" HorizontalAlignment="Stretch" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Width="250" Background="Transparent" Foreground="White" FontWeight="Bold"/>
       </DockPanel>
       <Canvas Name="XCanvas">
-            <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
-                <Button>holy</Button>
-                <Button>crap</Button>
-            </StackPanel>
-            <Viewport3D Name="XViewport" Width="{Binding ElementName=XCanvas, Path=ActualWidth}" Height="{Binding ElementName=XCanvas, Path=ActualHeight}"/>
+         <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
+            <Button Style="{DynamicResource ToolbarButtonStyle}">Rotate</Button>
+            <Button Style="{DynamicResource ToolbarButtonStyle}">Zoom</Button>
+            <Button Style="{DynamicResource ToolbarButtonStyle}">Animate</Button>
+         </StackPanel>
+         <Viewport3D Name="XViewport" Width="{Binding ElementName=XCanvas, Path=ActualWidth}" Height="{Binding ElementName=XCanvas, Path=ActualHeight}"/>
       </Canvas>
    </DockPanel>
-   
 </Window>

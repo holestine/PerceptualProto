@@ -11,6 +11,7 @@ namespace Lorenz
       {
          Mouse,
          Rotate,
+         Animate,
          Translate,
          Scale,
          Idle
@@ -74,11 +75,11 @@ namespace Lorenz
 
             switch (data.label)
             {
-               case PXCMGesture.Gesture.Label.LABEL_POSE_PEACE:
-                  m_Mode = Mode.Translate;
-                  break;
                case PXCMGesture.Gesture.Label.LABEL_POSE_BIG5:
                   m_Mode = Mode.Rotate;
+                  break;
+               case PXCMGesture.Gesture.Label.LABEL_POSE_PEACE:
+                  m_Mode = Mode.Animate;
                   break;
                case PXCMGesture.Gesture.Label.LABEL_POSE_THUMB_UP:
                   m_Mode = Mode.Scale;
@@ -91,8 +92,6 @@ namespace Lorenz
 
       public override bool OnNewFrame()
       {
-
-
          PXCMGesture gesture = QueryGesture();
          pxcmStatus status = gesture.QueryNodeData(0, PXCMGesture.GeoNode.Label.LABEL_BODY_HAND_PRIMARY | PXCMGesture.GeoNode.Label.LABEL_FINGER_INDEX, m_Data);
          PXCMPoint3DF32 center;
@@ -111,8 +110,13 @@ namespace Lorenz
                      var axis = new Vector3D(center.y - m_Data[1].positionImage.y, center.x - m_Data[1].positionImage.x, 0);
                      m_UI.Rotate(axis, angle);
                      
-                     break;/*
-                  case Mode.Mouse:
+                     break;
+                  case Mode.Animate:
+                     m_UI.SendMessage("Animate");
+                     m_UI.Animate(new Vector3D(0, 0, 1), 1);
+                     break;
+
+                     /* case Mode.Mouse:
                      var xPos = m_XOrigin - m_Data[0].positionImage.x + m_InitialHandPos.X;
                      var yPos = m_YOrigin + m_Data[0].positionImage.y - m_InitialHandPos.Y;
                      MouseUtilities.SetPosition((int)xPos, (int)yPos);
@@ -121,10 +125,7 @@ namespace Lorenz
                      m_UI.SendMessage("Y");
                      m_UI.Rotate(new Vector3D(0, 1, 0), 1);
                      break;
-                  case Mode.Scale:
-                     m_UI.SendMessage("Z");
-                     m_UI.Rotate(new Vector3D(0, 0, 1), 1);
-                     break;*/
+                  */
                }
             }
          }

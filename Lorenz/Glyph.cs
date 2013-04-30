@@ -1,28 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media;
+﻿using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
 namespace Lorenz
 {
     class Glyph : ModelVisual3D
     {
-        private const double DEFAULT_BRUSH_OPACITY = 0.9;
+        private const double DEFAULT_BRUSH_OPACITY = 0.5;
         private Color RED = Color.FromRgb(0xFF, 0x00, 0x00);
         private Color GREEN = Color.FromRgb(0x00, 0xFF, 0x00);
         private Color BLUE = Color.FromRgb(0x00, 0x00, 0xFF);
-        private Color WHITE = Color.FromRgb(0xFF, 0xFF, 0xFF);
+        private Color LIME = Color.FromRgb(0xAA, 0xFF, 0xCC);
+
+       private Color m_Color;
 
         public Glyph()
         {
             var pos = new Point3D(0, 0, 0);
-            Content = GetNewPyramindModel(ref pos, ref RED, ref GREEN, ref BLUE, ref WHITE, DEFAULT_BRUSH_OPACITY);
+            Content = GetNewPyramindModel(ref pos, ref RED, ref GREEN, ref BLUE, ref LIME, DEFAULT_BRUSH_OPACITY);
         }
 
-        private Model3DGroup GetNewPyramindModel(ref Point3D center, ref Color color1, ref Color color2, ref Color color3, ref Color color4, double opacity)
+        public Glyph(Color c)
+        {
+           var pos = new Point3D(0, 0, 0);
+           Content = GetNewPyramindModel(ref pos, ref c, ref c, ref c, ref c, DEFAULT_BRUSH_OPACITY);
+        }
+
+       public Color Color
+       {
+          get { return m_Color; }
+          set { m_Color = value; }
+       }
+
+       private Model3DGroup GetNewPyramindModel(ref Point3D center, ref Color color1, ref Color color2, ref Color color3, ref Color color4, double opacity)
         {
             var pyramid = new Model3DGroup();
 
