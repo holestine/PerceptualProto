@@ -16,11 +16,16 @@
    </Window.Background>
    
    <DockPanel>
-      <DockPanel DockPanel.Dock="Left">
+        
+            <DockPanel DockPanel.Dock="Left">
          <TextBox Name="XTextbox" HorizontalAlignment="Stretch" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Width="250" Background="Transparent" Foreground="White" FontWeight="Bold"/>
       </DockPanel>
       <Canvas Name="XCanvas">
-         <Viewport3D Name="XViewport" Width="{Binding ElementName=XCanvas, Path=ActualWidth}" Height="{Binding ElementName=XCanvas, Path=ActualHeight}"/>
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
+                <Button>holy</Button>
+                <Button>crap</Button>
+            </StackPanel>
+            <Viewport3D Name="XViewport" Width="{Binding ElementName=XCanvas, Path=ActualWidth}" Height="{Binding ElementName=XCanvas, Path=ActualHeight}"/>
       </Canvas>
    </DockPanel>
    
