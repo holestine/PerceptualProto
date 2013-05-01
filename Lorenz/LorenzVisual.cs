@@ -1,11 +1,14 @@
-﻿using System.Windows.Media;
+﻿using System;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Media3D;
 
 namespace Lorenz
 {
    class LorenzVisual : ModelVisual3D
    {
-      const int NUM_POINTS = 1000;
+      const int NUM_POINTS = 100;
       const double STEP_SIZE = .005;
       
       private Point3D m_StartPos;
@@ -25,7 +28,7 @@ namespace Lorenz
       public LorenzVisual(Point3D start, Color color)
       {
          m_StartPos = start;
-         CreateVisual(color);
+         CreateVisual();
       }
 
       public Point3D StartingPoint
@@ -45,20 +48,6 @@ namespace Lorenz
 
             Children.Add(glyph);
             pos = RK4Lorenz(pos, STEP_SIZE);
-         }
-      }
-
-      private void CreateVisual(Color color)
-      {
-         for (var i = 0; i < NUM_POINTS; i++)
-         {
-            var glyph = new Glyph(color)
-            {
-               Transform = new TranslateTransform3D(m_StartPos.X, m_StartPos.Y, m_StartPos.Z),
-            };
-
-            Children.Add(glyph);
-            m_StartPos = RK4Lorenz(m_StartPos, STEP_SIZE);
          }
       }
 
@@ -112,10 +101,26 @@ namespace Lorenz
 
       public void Recalculate(Point3D start)
       {
-         // TODO Modify existing children instead of creating new ones
          m_StartPos = start;
-         Children.Clear();
-         CreateVisual();
+         Point3D pos = start;
+
+         
+
+         foreach (Glyph glyph in Children)
+         {
+            var animation = new DoubleAnimation()
+               {
+                  From = 0.0,
+                  To = pos.X,
+                  BeginTime = TimeSpan.FromSeconds(1)
+               };
+
+            glyph.SetAnimation(animation);
+
+            //glyph.Transform = new TranslateTransform3D(pos.X, pos.Y, pos.Z);
+            pos = RK4Lorenz(pos, STEP_SIZE);
+         }
+
       }
    }
 }

@@ -48,7 +48,7 @@ namespace Lorenz
 
       public override void OnAlert(ref PXCMGesture.Alert data)
       {
-         m_UI.SendMessage(string.Format("ALERT: {0}", data.label));
+         m_UI.Write(string.Format("ALERT: {0}", data.label));
 
          switch (data.label)
          {
@@ -62,7 +62,7 @@ namespace Lorenz
 
       public override void OnGesture(ref PXCMGesture.Gesture data)
       {
-         m_UI.SendMessage(string.Format("GESTURE: {0}", data.label));
+         m_UI.Write(string.Format("GESTURE: {0}", data.label));
 
          PXCMGesture gesture = QueryGesture();
          PXCMGesture.GeoNode ndata;
@@ -76,12 +76,24 @@ namespace Lorenz
             switch (data.label)
             {
                case PXCMGesture.Gesture.Label.LABEL_POSE_BIG5:
+                  if (m_Mode != Mode.Rotate)
+                  {
+                     m_UI.Write("Rotate Mode");   
+                  }
                   m_Mode = Mode.Rotate;
                   break;
                case PXCMGesture.Gesture.Label.LABEL_POSE_PEACE:
+                  if (m_Mode != Mode.Animate)
+                  {
+                     m_UI.Write("Animate Mode");
+                  }
                   m_Mode = Mode.Animate;
                   break;
                case PXCMGesture.Gesture.Label.LABEL_POSE_THUMB_UP:
+                  if (m_Mode != Mode.Scale)
+                  {
+                     m_UI.Write("Scale Mode");
+                  }
                   m_Mode = Mode.Scale;
                   break;
                default:
@@ -105,24 +117,25 @@ namespace Lorenz
                switch (m_Mode)
                {
                   case Mode.Rotate:
-                     m_UI.SendMessage("Rotate");
                      double angle = new Vector3D(center.y - m_Data[1].positionImage.y, center.x - m_Data[1].positionImage.x, 0).Length/100;
                      var axis = new Vector3D(center.y - m_Data[1].positionImage.y, center.x - m_Data[1].positionImage.x, 0);
                      m_UI.Rotate(axis, angle);
-                     
                      break;
                   case Mode.Animate:
-                     m_UI.SendMessage("Animate");
-                     m_UI.Animate(new Vector3D(0, 0, 1), 1);
+                     if (m_Data[1].positionImage.x != 0 || m_Data[1].positionImage.y != 0)
+                     {
+                        m_UI.Animate(new Point3D(m_Data[1].positionImage.x, m_Data[1].positionImage.y, 50));
+                     }
                      break;
 
-                     /* case Mode.Mouse:
+                     /* 
+                  case Mode.Mouse:
                      var xPos = m_XOrigin - m_Data[0].positionImage.x + m_InitialHandPos.X;
                      var yPos = m_YOrigin + m_Data[0].positionImage.y - m_InitialHandPos.Y;
                      MouseUtilities.SetPosition((int)xPos, (int)yPos);
                      break;
                   case Mode.Translate:
-                     m_UI.SendMessage("Y");
+                     m_UI.Write("Y");
                      m_UI.Rotate(new Vector3D(0, 1, 0), 1);
                      break;
                   */
@@ -137,7 +150,7 @@ namespace Lorenz
       {
          if (!m_DeviceLost)
          {
-            m_UI.SendMessage("Device disconnected");
+            m_UI.Write("Device disconnected");
          }
          m_DeviceLost = true;
          return base.OnDisconnect();
@@ -145,7 +158,7 @@ namespace Lorenz
 
       public override void OnReconnect()
       {
-         m_UI.SendMessage("Device reconnected");
+         m_UI.Write("Device reconnected");
          m_DeviceLost = false;
       }
 
@@ -153,7 +166,7 @@ namespace Lorenz
       {
          if (!LoopFrames())
          {
-            m_UI.SendMessage(String.Format("Failed to initialize or stream data"));
+            m_UI.Write(String.Format("Failed to initialize or stream data"));
          }
          Dispose();
       }

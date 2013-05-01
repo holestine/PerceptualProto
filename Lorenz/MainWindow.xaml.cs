@@ -47,7 +47,7 @@ namespace Lorenz
 
       #region Public Methods
 
-      public void SendMessage(string message)
+      public void Write(string message)
       {
          Dispatcher.BeginInvoke(
             (Action)delegate
@@ -76,7 +76,7 @@ namespace Lorenz
                });
       }
 
-      public void Animate(Vector3D axis, double angle)
+      public void Animate(Point3D newStart)
       {
          if (m_State != State.Idle) return;
 
@@ -85,17 +85,9 @@ namespace Lorenz
          Dispatcher.BeginInvoke(
             (Action)delegate
                {
-                m_Lorenz.Recalculate(new Point3D(m_Lorenz.StartingPoint.X + 1, m_Lorenz.StartingPoint.Y + 1, m_Lorenz.StartingPoint.Z + 1));
-
-                  /*
-               var rotation = new AxisAngleRotation3D { Axis = axis, Angle = angle };
-               var transform = new RotateTransform3D { Rotation = rotation };
-               var t = new Transform3DGroup();
-               t.Children.Add(m_Lorenz.Transform);
-               t.Children.Add(transform);
-               m_Lorenz.Transform = t;
-                   */
-               m_State = State.Idle;
+                  //Write(String.Format("New Start Point ({0}, {1}, {2})", newStart.X, newStart.Y, newStart.Z));
+                  m_Lorenz.Recalculate(newStart);
+                  m_State = State.Idle;
             });
       }
 
