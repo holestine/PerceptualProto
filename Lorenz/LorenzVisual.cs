@@ -8,7 +8,7 @@ namespace Lorenz
 {
    class LorenzVisual : ModelVisual3D
    {
-      const int NUM_POINTS = 100;
+      const int NUM_POINTS = 400;
       const double STEP_SIZE = .005;
       
       private Point3D m_StartPos;
@@ -108,16 +108,18 @@ namespace Lorenz
 
          foreach (Glyph glyph in Children)
          {
+             /*
             var animation = new DoubleAnimation()
                {
                   From = 0.0,
                   To = pos.X,
                   BeginTime = TimeSpan.FromSeconds(1)
                };
-
+             
             glyph.SetAnimation(animation);
-
-            //glyph.Transform = new TranslateTransform3D(pos.X, pos.Y, pos.Z);
+             */
+            
+             glyph.Transform = new TranslateTransform3D(pos.X, pos.Y, pos.Z);
             pos = RK4Lorenz(pos, STEP_SIZE);
          }
 

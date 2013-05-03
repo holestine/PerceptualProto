@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Media.Media3D;
 
 namespace Lorenz
@@ -15,16 +13,10 @@ namespace Lorenz
    public partial class MainWindow
    {
       #region Constants
-      private const double DEFAULT_BRUSH_OPACITY = 0.9;
-      //private const double SQRT3 = 1.73205080757f;
-      private Color RED = Color.FromRgb(0xFF, 0x00, 0x00);
-      private Color GREEN = Color.FromRgb(0x00, 0xFF, 0x00);
-      private Color BLUE = Color.FromRgb(0x00, 0x00, 0xFF);
-      private Color WHITE = Color.FromRgb(0xFF, 0xFF, 0xFF);
       private Color AMBIENT_LIGHT = Color.FromRgb(0x30, 0x30, 0x30);
       private Color POINT_LIGHT = Color.FromRgb(0xDD, 0xDD, 0xDD);
       #endregion Constants
-
+        
       #region Enumerations
       private enum State
       {
@@ -47,7 +39,7 @@ namespace Lorenz
 
       #region Public Methods
 
-      public void Write(string message)
+      public void Notify(string message)
       {
          Dispatcher.BeginInvoke(
             (Action)delegate
@@ -85,10 +77,32 @@ namespace Lorenz
          Dispatcher.BeginInvoke(
             (Action)delegate
                {
-                  //Write(String.Format("New Start Point ({0}, {1}, {2})", newStart.X, newStart.Y, newStart.Z));
                   m_Lorenz.Recalculate(newStart);
                   m_State = State.Idle;
             });
+      }
+
+      public void Animate(Point3D newStart, int steps)
+      {
+          if (m_State != State.Idle) return;
+
+          m_State = State.Animating;
+          Point3D pos = newStart;
+
+          for (double i = 0; i < steps; i++)
+          {
+              Dispatcher.BeginInvoke(
+                 (Action)delegate
+                 {
+
+                     pos.X = newStart.X * Math.Cos(i / 50);
+                     pos.Y = newStart.Y * Math.Sin(i / 50);
+                     pos.Z = newStart.Z * Math.Sin(i / 50);
+                     m_Lorenz.Recalculate(pos);
+                 });
+              Thread.Sleep(125);
+          }
+          m_State = State.Idle;
       }
 
       #endregion Public Methods
@@ -145,20 +159,13 @@ namespace Lorenz
 
       private void OnMouseEnter(object sender, MouseEventArgs e)
       {
-         // Set selected item
-         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 0, 1), Angle = 10 };
-         var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
-         m_Model3DGroup.Transform = myRotateTransform3D;
+         var axisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 0, 1), Angle = 90 };
+         var rotateTransform3D = new RotateTransform3D { Rotation = axisAngleRotation3D };
+         m_Model3DGroup.Transform = rotateTransform3D;
 
-          
-         int i = 0;
          foreach (var item in XViewport.Children)
          {
-            if (i%2 == 0)
-            {
-               item.Transform = myRotateTransform3D;   
-            }
-            i++;
+             item.Transform = rotateTransform3D;   
          }
       }
 
@@ -168,18 +175,6 @@ namespace Lorenz
          var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = 20 };
          myRotateTransform3D.Rotation = myAxisAngleRotation3D;
 
-         /*
-         var doubleAnimation = new DoubleAnimation()
-            { 
-               From = 500,
-               To = 600,
-               Duration = TimeSpan.FromSeconds(2),
-               AutoReverse = true,
-               RepeatBehavior = RepeatBehavior.Forever
-            };
-         Storyboard.SetTargetName(doubleAnimation, "XCanvas");
-         //Storyboard.SetTargetProperty(doubleAnimation, new PropertyPath(XCanvas.Width));
-         */
          var glyph = new Glyph
                 {
                     Transform = new TranslateTransform3D(new Vector3D(5*Math.Sin(0), 10*Math.Cos(0), Math.Cos(0)))
