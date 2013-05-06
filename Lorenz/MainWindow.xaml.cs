@@ -68,7 +68,7 @@ namespace Lorenz
                });
       }
 
-      public void Animate(Point3D newStart)
+      public void Animate(Point3D start)
       {
          if (m_State != State.Idle) return;
 
@@ -77,30 +77,31 @@ namespace Lorenz
          Dispatcher.BeginInvoke(
             (Action)delegate
                {
-                  m_Lorenz.Recalculate(newStart);
+                  m_Lorenz.Recalculate(start);
                   m_State = State.Idle;
             });
       }
 
-      public void Animate(Point3D newStart, int steps)
+      public void Animate(int steps)
       {
           if (m_State != State.Idle) return;
 
           m_State = State.Animating;
-          Point3D pos = newStart;
-
+          Point3D pos = m_Lorenz.StartingPoint;
+          Point3D pos2 = m_Lorenz.StartingPoint;
+          double phi = Math.Atan(pos.Y/pos.X);
           for (double i = 0; i < steps; i++)
           {
+              pos.X = pos2.X * Math.Cos(phi + i / 50);
+              pos.Y = pos2.Y * Math.Sin(phi + i / 50);
+              pos.Z = pos2.Z * Math.Cos(i / 50) + i;
+                    
               Dispatcher.BeginInvoke(
                  (Action)delegate
                  {
-
-                     pos.X = newStart.X * Math.Cos(i / 50);
-                     pos.Y = newStart.Y * Math.Sin(i / 50);
-                     pos.Z = newStart.Z * Math.Sin(i / 50);
-                     m_Lorenz.Recalculate(pos);
+                      m_Lorenz.Recalculate(pos);
                  });
-              Thread.Sleep(125);
+              Thread.Sleep(100);
           }
           m_State = State.Idle;
       }
@@ -188,8 +189,6 @@ namespace Lorenz
 
       private void OnLoaded(object sender, RoutedEventArgs e)
       {
-         m_GestureEngine.SetOrigin(GetCanvasCenter());
-
          // Add the geometry model to the viewport
          m_ModelVisual3D.Content = m_Model3DGroup;
          XViewport.Children.Add(m_ModelVisual3D);
@@ -214,11 +213,6 @@ namespace Lorenz
          m_PipelineThread.Abort();
       }
 
-      private void OnLocationChanged(object sender, EventArgs e)
-      {
-         m_GestureEngine.SetOrigin(GetCanvasCenter());
-      }
-
       private Point GetCanvasCenter()
       {
           return new Point(Left + XCanvas.ActualWidth / 2 + XTextbox.Width, Top + XCanvas.ActualHeight / 2);
@@ -241,17 +235,6 @@ namespace Lorenz
       private void DoAsyncWork(object sender, DoWorkEventArgs e)
       {
 
-      }
-
-      private void UpdateUI(object sender, RunWorkerCompletedEventArgs e)
-      {
-         //Rotate model
-         var myAxisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 1), Angle = m_Angle += 10 };
-         var myRotateTransform3D = new RotateTransform3D { Rotation = myAxisAngleRotation3D };
-         Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() =>
-         {
-            m_Model3DGroup.Transform = myRotateTransform3D;
-         }));
       }
  */
 #endregion Notes

@@ -59,8 +59,9 @@
                         <GradientStop Color="CornflowerBlue" Offset="0" />
                         <GradientStop Color="Blue" Offset="0.4" />
                         <GradientStop Color="Yellow" Offset="0.55" />
-                        <GradientStop Color="GreenYellow" Offset="1" />
-                     </RadialGradientBrush>
+                        <GradientStop Color="GreenYellow" Offset="0.65" />
+                        <GradientStop Color="Green" Offset="0.65" />
+                  </RadialGradientBrush>
                   </DiffuseMaterial.Brush>
                </DiffuseMaterial>
             </GeometryModel3D.Material>

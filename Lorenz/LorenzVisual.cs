@@ -8,7 +8,7 @@ namespace Lorenz
 {
    class LorenzVisual : ModelVisual3D
    {
-      const int NUM_POINTS = 400;
+      const int NUM_POINTS = 500;
       const double STEP_SIZE = .005;
       
       private Point3D m_StartPos;
