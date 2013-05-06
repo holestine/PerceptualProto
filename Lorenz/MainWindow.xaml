@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow"
         Loaded="OnLoaded"
-        Closed="OnClosed">
+        Closed="OnClosed"
+        WindowState="Maximized">
    <Window.Background>
       <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
          <LinearGradientBrush.GradientStops>
@@ -20,9 +21,9 @@
       </DockPanel>
       <Canvas Name="XCanvas">
          <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
-            <Button Style="{DynamicResource ToolbarButtonStyle}">Rotate</Button>
-            <Button Style="{DynamicResource ToolbarButtonStyle}">Zoom</Button>
-            <Button Style="{DynamicResource ToolbarButtonStyle}">Animate</Button>
+            <Button Style="{DynamicResource ToolbarButtonStyle}" Click="OnZoomIn" Width="20">+</Button>
+            <Button Style="{DynamicResource ToolbarButtonStyle}" Click="OnZoomOut" Width="20">-</Button>
+            <Button Style="{DynamicResource ToolbarButtonStyle}" Click="OnRotate">Rotate</Button>
          </StackPanel>
          <Viewport3D Name="XViewport" Width="{Binding ElementName=XCanvas, Path=ActualWidth}" Height="{Binding ElementName=XCanvas, Path=ActualHeight}"/>
       </Canvas>

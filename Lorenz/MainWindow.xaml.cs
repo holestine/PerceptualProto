@@ -20,7 +20,6 @@ namespace Lorenz
       #region Enumerations
       private enum State
       {
-         Rotating,
          Idle,
          Animating
       };
@@ -51,40 +50,30 @@ namespace Lorenz
 
       public void Rotate(Vector3D axis, double angle)
       {
-         if (m_State != State.Idle) return;
-
-         m_State = State.Rotating;
-
          Dispatcher.BeginInvoke(
             (Action) delegate
                {
-                  var rotation = new AxisAngleRotation3D {Axis = axis, Angle = angle};
-                  var transform = new RotateTransform3D {Rotation = rotation};
+                  var rotation = new AxisAngleRotation3D { Axis = axis, Angle = angle };
+                  var transform = new RotateTransform3D { Rotation = rotation };
                   var t = new Transform3DGroup();
                   t.Children.Add(m_Lorenz.Transform);
                   t.Children.Add(transform);
                   m_Lorenz.Transform = t;
-                  m_State = State.Idle;
                });
       }
 
       public void Animate(Point3D start)
       {
-         if (m_State != State.Idle) return;
-
-         m_State = State.Animating;
-
          Dispatcher.BeginInvoke(
             (Action)delegate
                {
                   m_Lorenz.Recalculate(start);
-                  m_State = State.Idle;
             });
       }
 
       public void Animate(int steps)
       {
-          if (m_State != State.Idle) return;
+          if (m_State == State.Animating) return;
 
           m_State = State.Animating;
           Point3D pos = m_Lorenz.StartingPoint;
@@ -219,6 +208,35 @@ namespace Lorenz
       }
 
       #endregion Window Events
+
+      private void OnZoomIn(object sender, RoutedEventArgs e)
+      {
+         //var rotation = new AxisAngleRotation3D { Axis = axis, Angle = angle };
+         var transform = new ScaleTransform3D(1.25, 1.25, 1.25); //RotateTransform3D { Rotation = rotation };
+         var t = new Transform3DGroup();
+         t.Children.Add(m_Lorenz.Transform);
+         t.Children.Add(transform);
+         m_Lorenz.Transform = t;
+      }
+
+      private void OnZoomOut(object sender, RoutedEventArgs e)
+      {
+         var transform = new ScaleTransform3D(.75, .75, .75); //RotateTransform3D { Rotation = rotation };
+         var t = new Transform3DGroup();
+         t.Children.Add(m_Lorenz.Transform);
+         t.Children.Add(transform);
+         m_Lorenz.Transform = t;
+      }
+
+      private void OnRotate(object sender, RoutedEventArgs e)
+      {
+         var rotation = new AxisAngleRotation3D { Axis = new Vector3D(0, 1, 0), Angle = 5 };
+         var transform = new RotateTransform3D { Rotation = rotation };
+         var t = new Transform3DGroup();
+         t.Children.Add(m_Lorenz.Transform);
+         t.Children.Add(transform);
+         m_Lorenz.Transform = t;
+      }
    }
 }
 

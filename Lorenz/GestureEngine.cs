@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Media.Media3D;
 
@@ -119,19 +120,23 @@ namespace Lorenz
                             }
                             break;
                         case Mode.Animate:
-                            m_UI.Animate(250);
+                            var workerThread = new BackgroundWorker();
+                            workerThread.DoWork += OnAnimate;
+                            //workerThread.RunWorkerCompleted += UpdateUI;
+                            workerThread.RunWorkerAsync();
                             break;
-                        /* 
                      case Mode.Mouse:
-                        var xPos = m_XOrigin - m_Data[0].positionImage.x + m_InitialHandPos.X;
-                        var yPos = m_YOrigin + m_Data[0].positionImage.y - m_InitialHandPos.Y;
-                        MouseUtilities.SetPosition((int)xPos, (int)yPos);
+                        MouseUtilities.SetPosition(0, 0);
                         break;
-                     */
                     }
                 }
             }
             return (++m_NumFrames < 50000);
+        }
+
+        private void OnAnimate(object sender, DoWorkEventArgs e)
+        {
+           m_UI.Animate(250);
         }
 
         public override bool OnDisconnect()
