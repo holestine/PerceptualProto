@@ -2,9 +2,9 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Lorenz.App"
-             StartupUri="MainWindow.xaml">
-    <Application.Resources>
-         
+             StartupUri="LorenzWindow.xaml">
+   <Application.Resources>
+
       <Style x:Key="ToolbarButtonStyle"
            TargetType="Button">
          <Setter Property="Margin"
@@ -18,7 +18,7 @@
          <Setter Property="Foreground"
                 Value= "#D4D4D4"/>
          <Setter Property="FontWeight"
-                Value="Normal" /> 
+                Value="Normal" />
 
          <Setter Property="Template">
             <Setter.Value>
@@ -131,9 +131,10 @@
                      </VisualStateManager.VisualStateGroups>
 
                      <Rectangle x:Name="Rectangle"
-                                   Stroke="SlateGray"
-                                   RadiusX="5"
-                                   RadiusY="5">
+                                Stroke="SlateGray"
+                                StrokeThickness="2"
+                                RadiusX="5"
+                                RadiusY="5">
                         <Rectangle.Fill>
                            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                               <GradientStop Color="#FFB5C7D6" Offset="0.05" />
@@ -153,13 +154,10 @@
 
                      <Grid.RenderTransform>
                         <TransformGroup>
-                           <ScaleTransform ScaleX="1"
-                                                ScaleY="1" />
-                           <SkewTransform AngleX="0"
-                                               AngleY="0" />
+                           <ScaleTransform ScaleX="1" ScaleY="1" />
+                           <SkewTransform AngleX="0" AngleY="0" />
                            <RotateTransform Angle="0" />
-                           <TranslateTransform X="0"
-                                                    Y="0" />
+                           <TranslateTransform X="0" Y="0" />
                         </TransformGroup>
                      </Grid.RenderTransform>
 
@@ -169,8 +167,8 @@
          </Setter>
       </Style>
 
-   
-    </Application.Resources>
+
+   </Application.Resources>
 </Application>
 
    

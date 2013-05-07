@@ -61,11 +61,11 @@
                         <GradientStop Color="Yellow" Offset="0.55" />
                         <GradientStop Color="GreenYellow" Offset="0.65" />
                         <GradientStop Color="Green" Offset="0.65" />
-                  </RadialGradientBrush>
+                     </RadialGradientBrush>
                   </DiffuseMaterial.Brush>
                </DiffuseMaterial>
             </GeometryModel3D.Material>
-         
+
          </GeometryModel3D>
       </Model3DGroup>
    </ModelVisual3D.Content>
@@ -73,8 +73,8 @@
    <!-- Transform for animated rotation. -->
    <ModelVisual3D.Transform>
       <Transform3DGroup>
-         <TranslateTransform3D x:Name="XTransform" />   
+         <TranslateTransform3D x:Name="XTransform" />
       </Transform3DGroup>
-      
+
    </ModelVisual3D.Transform>
 </ModelVisual3D>

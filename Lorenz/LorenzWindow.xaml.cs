@@ -8,15 +8,16 @@ using System.Windows.Media.Media3D;
 namespace Lorenz
 {
    /// <summary>
-   /// Interaction logic for MainWindow.xaml
+   /// Interaction logic for LorenzWindow.xaml
    /// </summary>
-   public partial class MainWindow
+   public partial class LorenzWindow : Window
    {
       #region Constants
-      private Color AMBIENT_LIGHT = Color.FromRgb(0x30, 0x30, 0x30);
+      private Color AMBIENT_LIGHT = Color.FromRgb(0x22, 0x22, 0x22);
       private Color POINT_LIGHT = Color.FromRgb(0xDD, 0xDD, 0xDD);
+      private const int NUM_ANIMATION_STEPS = 250;
       #endregion Constants
-        
+
       #region Enumerations
       private enum State
       {
@@ -29,76 +30,13 @@ namespace Lorenz
       private Model3DGroup m_Model3DGroup;
       private ModelVisual3D m_ModelVisual3D;
       private LorenzVisual m_Lorenz;
-      private Thread m_PipelineThread;
+      private Thread m_GestureEngineThread;
       private GestureEngine m_GestureEngine;
-
       private State m_State;
-
       #endregion Private Data
 
-      #region Public Methods
-
-      public void Notify(string message)
-      {
-         Dispatcher.BeginInvoke(
-            (Action)delegate
-            {
-               XTextbox.Text += message + "\n";
-               XTextbox.ScrollToEnd();
-            });
-      }
-
-      public void Rotate(Vector3D axis, double angle)
-      {
-         Dispatcher.BeginInvoke(
-            (Action) delegate
-               {
-                  var rotation = new AxisAngleRotation3D { Axis = axis, Angle = angle };
-                  var transform = new RotateTransform3D { Rotation = rotation };
-                  var t = new Transform3DGroup();
-                  t.Children.Add(m_Lorenz.Transform);
-                  t.Children.Add(transform);
-                  m_Lorenz.Transform = t;
-               });
-      }
-
-      public void Animate(Point3D start)
-      {
-         Dispatcher.BeginInvoke(
-            (Action)delegate
-               {
-                  m_Lorenz.Recalculate(start);
-            });
-      }
-
-      public void Animate(int steps)
-      {
-          if (m_State == State.Animating) return;
-
-          m_State = State.Animating;
-          Point3D pos = m_Lorenz.StartingPoint;
-          Point3D pos2 = m_Lorenz.StartingPoint;
-          double phi = Math.Atan(pos.Y/pos.X);
-          for (double i = 0; i < steps; i++)
-          {
-              pos.X = pos2.X * Math.Cos(phi + i / 50);
-              pos.Y = pos2.Y * Math.Sin(phi + i / 50);
-              pos.Z = pos2.Z * Math.Cos(i / 50) + i;
-                    
-              Dispatcher.BeginInvoke(
-                 (Action)delegate
-                 {
-                      m_Lorenz.Recalculate(pos);
-                 });
-              Thread.Sleep(100);
-          }
-          m_State = State.Idle;
-      }
-
-      #endregion Public Methods
-
       #region Initializaion
-      public MainWindow()
+      public LorenzWindow()
       {
          InitializeComponent();
          InitializeGraphics();
@@ -128,10 +66,10 @@ namespace Lorenz
          m_Model3DGroup.Children.Add(ambientLight);
 
          var pointLight = new PointLight
-            {
-               Color = POINT_LIGHT,
-               Position = new Point3D(10, 20, -10)
-            };
+         {
+            Color = POINT_LIGHT,
+            Position = new Point3D(10, 20, -10)
+         };
          m_Model3DGroup.Children.Add(pointLight);
       }
 
@@ -139,23 +77,78 @@ namespace Lorenz
       {
          m_State = State.Idle;
          m_GestureEngine = new GestureEngine(this);
-         m_PipelineThread = new Thread(m_GestureEngine.Start);
-         m_PipelineThread.Start();
+         m_GestureEngineThread = new Thread(m_GestureEngine.Start);
+         m_GestureEngineThread.Start();
       }
 
       #endregion Initializaion
+
+      #region Public Methods
+      public void Notify(string message)
+      {
+         Dispatcher.BeginInvoke(
+            (Action)delegate
+            {
+               XTextbox.Text += message + "\n";
+               XTextbox.ScrollToEnd();
+            });
+      }
+
+      public void Rotate(Vector3D axis, double angle)
+      {
+         Dispatcher.BeginInvoke(
+            (Action)delegate
+            {
+               var transformGroup = new Transform3DGroup();
+               // Get current transform
+               transformGroup.Children.Add(m_Lorenz.Transform);
+               // Add new transform
+               transformGroup.Children.Add(new RotateTransform3D { Rotation = new AxisAngleRotation3D { Axis = axis, Angle = angle } });
+               // Apply changes
+               m_Lorenz.Transform = transformGroup;
+            });
+      }
+
+      public void Move(Point3D delta)
+      {
+         Dispatcher.BeginInvoke((Action)(() => m_Lorenz.Move(delta)));
+      }
+
+      public void Animate()
+      {
+         if (m_State == State.Animating) return;
+
+         m_State = State.Animating;
+
+         Point3D pos = m_Lorenz.StartingPoint;
+         Point3D pos2 = m_Lorenz.StartingPoint;
+
+         double phi = Math.Atan(pos.Y / pos.X);
+
+         for (double i = 0; i < NUM_ANIMATION_STEPS; i++)
+         {
+            pos.X = pos2.X * Math.Cos(phi + i / 50);
+            pos.Y = pos2.Y * Math.Sin(phi + i / 50);
+            pos.Z = pos2.Z * Math.Cos(i / 50) + i;
+
+            Dispatcher.BeginInvoke((Action)(() => m_Lorenz.Recalculate(pos)));
+            Thread.Sleep(100);
+         }
+         m_State = State.Idle;
+      }
+
+      #endregion Public Methods
 
       #region Mouse Events
 
       private void OnMouseEnter(object sender, MouseEventArgs e)
       {
-         var axisAngleRotation3D = new AxisAngleRotation3D { Axis = new Vector3D(0, 0, 1), Angle = 90 };
-         var rotateTransform3D = new RotateTransform3D { Rotation = axisAngleRotation3D };
+         var rotateTransform3D = new RotateTransform3D { Rotation = new AxisAngleRotation3D { Axis = new Vector3D(0, 0, 1), Angle = 90 }};
          m_Model3DGroup.Transform = rotateTransform3D;
 
          foreach (var item in XViewport.Children)
          {
-             item.Transform = rotateTransform3D;   
+            item.Transform = rotateTransform3D;
          }
       }
 
@@ -166,10 +159,10 @@ namespace Lorenz
          myRotateTransform3D.Rotation = myAxisAngleRotation3D;
 
          var glyph = new Glyph
-                {
-                    Transform = new TranslateTransform3D(new Vector3D(5*Math.Sin(0), 10*Math.Cos(0), Math.Cos(0)))
-                };
-          XViewport.Children.Add(glyph);
+         {
+            Transform = new TranslateTransform3D(new Vector3D(5 * Math.Sin(0), 10 * Math.Cos(0), Math.Cos(0)))
+         };
+         XViewport.Children.Add(glyph);
       }
 
       #endregion Mouse Events
@@ -186,7 +179,7 @@ namespace Lorenz
          XViewport.Children.Add(m_Lorenz);
          //XViewport.Children.Add(new LorenzVisual(new Point3D(50, -30, 20), Color.FromRgb(0x00, 0xFF, 0x00)));
          //XViewport.Children.Add(new LorenzVisual(new Point3D(-50, 50, -10), Color.FromRgb(0x00, 0x00, 0xFF)));
-         
+
          // Wire up mouse events
          XViewport.MouseDown += OnMouseDown;
          XViewport.MouseEnter += OnMouseEnter;
@@ -199,12 +192,7 @@ namespace Lorenz
       /// <param name="e"></param>
       private void OnClosed(object sender, EventArgs e)
       {
-         m_PipelineThread.Abort();
-      }
-
-      private Point GetCanvasCenter()
-      {
-          return new Point(Left + XCanvas.ActualWidth / 2 + XTextbox.Width, Top + XCanvas.ActualHeight / 2);
+         m_GestureEngineThread.Abort();
       }
 
       #endregion Window Events
@@ -239,20 +227,3 @@ namespace Lorenz
       }
    }
 }
-
-#region Notes
-/*
-      private void OnMouseEnter(object sender, MouseEventArgs e)
-      {
-         var workerThread = new BackgroundWorker();
-         workerThread.DoWork += DoAsyncWork;
-         workerThread.RunWorkerCompleted += UpdateUI;
-         workerThread.RunWorkerAsync();
-      }
-
-      private void DoAsyncWork(object sender, DoWorkEventArgs e)
-      {
-
-      }
- */
-#endregion Notes

@@ -1,7 +1,7 @@
-﻿<Window x:Class="Lorenz.MainWindow"
+﻿<Window x:Class="Lorenz.LorenzWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow"
+        Title="LorenzWindow"
         Loaded="OnLoaded"
         Closed="OnClosed"
         WindowState="Maximized">

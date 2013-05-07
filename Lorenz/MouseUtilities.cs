@@ -34,6 +34,7 @@ namespace Lorenz
       private static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);
       #endregion Imports
 
+      #region Public Methods
       public static Point GetPosition(Visual relativeTo)
       {
          var w32Mouse = new Win32Point();
@@ -54,9 +55,7 @@ namespace Lorenz
       public static void DoubleClick(Point p)
       {
          mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, (int)p.X, (int)p.Y, 0, 0);
-
          Thread.Sleep(150);
-
          mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, (int)p.X, (int)p.Y, 0, 0);
       }
 
@@ -83,5 +82,6 @@ namespace Lorenz
       {
          mouse_event(MOUSEEVENTF_LEFTUP, 50, 50, 0, 0);
       }
+      #endregion Public Methods
    }
 }
