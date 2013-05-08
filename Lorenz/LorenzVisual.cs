@@ -6,7 +6,7 @@ namespace Lorenz
    {
       #region Constants
       const int NUM_POINTS = 500;
-      const double STEP_SIZE = .01;
+      const double STEP_SIZE = .005;
       #endregion Constants
 
       #region Private Data

@@ -53,6 +53,7 @@ namespace Lorenz
          switch (data.label)
          {
             case PXCMGesture.Alert.Label.LABEL_GEONODE_INACTIVE:
+               m_UI.Notify("Idle Mode");
                m_Mode = Mode.Idle;
                break;
          }

@@ -2,7 +2,6 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="LorenzWindow"
-        Loaded="OnLoaded"
         Closed="OnClosed"
         WindowState="Maximized">
    <Window.Background>
@@ -25,7 +24,7 @@
             <Button Style="{DynamicResource ToolbarButtonStyle}" Click="OnZoomOut" Width="20">-</Button>
             <Button Style="{DynamicResource ToolbarButtonStyle}" Click="OnRotate">Rotate</Button>
          </StackPanel>
-         <Viewport3D Name="XViewport" Width="{Binding ElementName=XCanvas, Path=ActualWidth}" Height="{Binding ElementName=XCanvas, Path=ActualHeight}"/>
+         <Viewport3D Name="XViewport" Width="{Binding ElementName=XCanvas, Path=ActualWidth}" Height="{Binding ElementName=XCanvas, Path=ActualHeight}" MouseDown="OnMouseDown" MouseEnter="OnMouseEnter"/>
       </Canvas>
    </DockPanel>
 </Window>
