@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Lorenz Attractor</string>
+    <string name="string_settingText">Settings</string>
+    <string name="string_restart">Restart</string>
+    <string name="string_motionType">Translate</string>
+
+</resources>
