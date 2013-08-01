@@ -2,6 +2,9 @@
 
 #pragma once
 
+
+#include <msclr\marshal_cppstd.h>
+
 using namespace System;
 
 namespace ManagedCPP {
@@ -25,6 +28,12 @@ namespace ManagedCPP {
       int getX()
       {
          return x;
+      }
+
+      int Count(String^ str)
+      {
+         std::string stdString = msclr::interop::marshal_as< std::string >( str);
+         return stdString.length();
       }
 	};
 }

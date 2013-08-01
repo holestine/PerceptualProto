@@ -12,23 +12,17 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using ManagedCPP;
 
-namespace Managed_Client
+namespace Quaternion
 {
    /// <summary>
-   /// Interaction logic for MainWindow.xaml
+   /// Interaction logic for QuaternionVEuler.xaml
    /// </summary>
-   public partial class MainWindow : Window
+   public partial class QuaternionVEuler : Page
    {
-      public MainWindow()
+      public QuaternionVEuler()
       {
          InitializeComponent();
-         var x = ManagedClass.add(1, 2);
-
-         var managedClass = new ManagedClass();
-         var y = managedClass.getX();
-         var z = managedClass.Count("asdf");
       }
    }
 }

@@ -1,8 +1,9 @@
 ﻿<Window x:Class="Quaternion.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525">
-    <Grid>
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+        xmlns:quaternion="clr-namespace:Quaternion"
+        Title="Quaternion vs. Euler">
+    <quaternion:QuaternionVEuler>
         
-    </Grid>
+    </quaternion:QuaternionVEuler>
 </Window>
