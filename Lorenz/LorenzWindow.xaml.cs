@@ -179,20 +179,16 @@ namespace Lorenz
          m_GestureEngineThread.Abort();
       }
 
-      private void OnZoomIn(object sender, RoutedEventArgs e)
+      private void OnMouseWheel(object sender, MouseWheelEventArgs e)
       {
-         var transformGroup = new Transform3DGroup();
-         transformGroup.Children.Add(m_Lorenz.Transform);
-         transformGroup.Children.Add(new ScaleTransform3D(1.25, 1.25, 1.25));
-         m_Lorenz.Transform = transformGroup;
-      }
-
-      private void OnZoomOut(object sender, RoutedEventArgs e)
-      {
-         var transformGroup = new Transform3DGroup();
-         transformGroup.Children.Add(m_Lorenz.Transform);
-         transformGroup.Children.Add(new ScaleTransform3D(.75, .75, .75));
-         m_Lorenz.Transform = transformGroup;
+         if (e.Delta > 0)
+         {
+            Zoom(1.25);
+         }
+         else if (e.Delta < 0)
+         {
+            Zoom(1 / 1.25);
+         }
       }
 
       private void OnRotate(object sender, RoutedEventArgs e)
@@ -205,6 +201,25 @@ namespace Lorenz
             });
          m_Lorenz.Transform = transformGroup;
       }
+
+      private void OnAnimate(object sender, RoutedEventArgs e)
+      {
+         Dispatcher.BeginInvoke((Action)(() => m_Lorenz.Recalculate(new Point3D(double.Parse(x_X.Text), double.Parse(x_Y.Text), double.Parse(x_Z.Text)))));
+         //m_Lorenz.Move(new Point3D(double.Parse(x_X.Text), double.Parse(x_Y.Text), double.Parse(x_Z.Text)));
+      }
+
       #endregion Event Handlers
+
+      #region Private Methods
+      private void Zoom(double scale)
+      {
+         var transformGroup = new Transform3DGroup();
+         transformGroup.Children.Add(m_Lorenz.Transform);
+         transformGroup.Children.Add(new ScaleTransform3D(scale, scale, scale));
+         m_Lorenz.Transform = transformGroup;
+      }
+      #endregion Private Methods
+
+
    }
 }
