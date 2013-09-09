@@ -1,0 +1,148 @@
+<?xml version="1.0" ?>
+<project name="nant" default="test" xmlns="http://nant.sf.net/schemas/nant.xsd">
+
+	<!-- Global Definitions (Can be modified) //////////////////////////////////////// -->
+	<!-- To perform a rebuild uncomment the following line and 
+	     replace the value with the VSS label to build. -->
+	<!-- property name="VSS.label"		value="1.0.0.6" / -->
+	
+	<!-- To change the location where build results are stored 
+	     replace the following value with the desired location.-->
+	<property name="archive.dir"	value="\\Hfsdodata\sw\CHANNEL_PRODUCTS\Products\EIVCD\Builds" />	
+	
+	<!-- Global Definitions (Do not modify) ////////////////////////////////////////// -->
+	<property name="project.name"	value="EIVCD" />
+	<property name="build.dir"		value="bin" />
+	<property name="build.zip"		value="build.zip" />
+	<property name="source.dir"		value="src" />
+	<property name="solution.file"	value="${source.dir}\EIVCD.sln" />
+	<property name="version.dir"	value="${source.dir}\inc" />
+	<property name="version.file"	value="version.h" />
+	<property name="VSS.DB"			value="\\Hfsdodata\sw\CHANNEL_PRODUCTS\Products\EIVCD\VSS" />
+	<property name="VSS.cmd"		value="SS.EXE" />
+	<property name="VSS.user"		value="build" />
+	<property name="VSS.base"		value="$/build" />
+	<property name="Release.Notes"	value="ReleaseNotes.txt" />
+	
+	<!-- User Targets //////////////////////////////////////////////////////////////// -->
+	
+	<!-- Build Debug Solution -->
+	<target name="debug" depends="setup" description="Compiles using the Debug Configuration">
+		<call target="Clean" />
+		<solution solutionfile="${solution.file}" configuration="Debug" />
+		<call target="Zip" />
+		<move file="${build.zip}" tofile="${archive.dir}\${version}\${project.name}_${version}_debug.zip" />
+	</target>
+	
+	<!-- Build Release Solution -->
+	<target name="release" depends="setup" description="Compiles using the Release Configuration">
+		<call target="Clean" />
+		<solution solutionfile="${solution.file}" configuration="Release" />
+		<call target="Zip" /> 		
+		<move file="${build.zip}" tofile="${archive.dir}\${version}\${project.name}_${version}_release.zip" />
+		<move file="${Release.Notes}" tofile="${archive.dir}\${version}\${Release.Notes}" />
+	</target>
+	
+	<!-- Verify Debug and Release Unit Tests Were Succesful -->
+	<target name="test" depends="debug, release" description="Compile and Run Tests" />
+	
+	<!-- Functions //////////////////////////////////////////////////////////////// -->
+	<target name="setup" description="Setup environment">
+		<setenv>
+			<!-- cl.exe, rc.exe -->
+			<variable name="PATH" value="C:\Program Files\Microsoft Visual Studio .NET 2003\Vc7\bin;%PATH%"/>
+			<!-- IncVer.exe -->
+			<variable name="PATH" value=".\tools\IncVer\;%PATH%"/>
+			<!-- mspdb71.dll -->
+			<variable name="PATH" value="C:\Program Files\Microsoft Visual Studio .NET 2003\Common7\IDE;%PATH%"/>
+			<!-- VSS -->
+			<variable name="PATH" value="C:\Program Files\Microsoft Visual Studio\Common\VSS\win32;%PATH%"/>
+			<!-- variable name="PATH" value="C:\Program Files\Microsoft Visual Studio\VSS\win32;%PATH%"/ -->			
+			<!-- new.h -->
+			<variable name="INCLUDE" value="C:\Program Files\Microsoft Visual Studio .NET 2003\Vc7\include;%INCLUDE%"/>
+			<!-- winresrc.h -->
+			<variable name="INCLUDE" value="C:\Program Files\Microsoft Visual Studio .NET 2003\Vc7\PlatformSDK\Include;%INCLUDE%"/>
+			<!-- afxres.h -->
+			<variable name="INCLUDE" value="C:\Program Files\Microsoft Visual Studio .NET 2003\Vc7\atlmfc\include;%INCLUDE%"/>			
+			<!-- kernel32.lib -->
+			<variable name="LIB" value="C:\Program Files\Microsoft Visual Studio .NET 2003\Vc7\PlatformSDK\Lib;%LIB%"/>
+			<!-- uafxcwd.lib -->
+			<variable name="LIB" value="C:\Program Files\Microsoft Visual Studio .NET 2003\Vc7\atlmfc\lib;%LIB%"/>
+			<!-- msvcprtd.lib -->
+			<variable name="LIB" value="C:\Program Files\Microsoft Visual Studio .NET 2003\Vc7\Lib;%LIB%"/>
+			<!-- INC DIR -->
+			<variable name="INCLUDE" value=".\src\inc;%INCLUDE%"/>
+		</setenv>
+		
+		<!-- Check for rebuild -->
+		<if test="${property::exists('VSS.label')}" >
+			<property name="version" value="${VSS.label}" />
+		</if>
+		<ifnot test="${property::exists('VSS.label')}" >
+			<call target="Increment Version" />
+		</ifnot>
+		
+		<!-- Initialize source directory off of current directory -->
+		<mkdir dir="${source.dir}" />
+		<exec program="${VSS.cmd}">
+			<arg line="Workfold ${VSS.base}/${source.dir} ${directory::get-current-directory()}\${source.dir} -Y${VSS.user} -I-Y -O-" />	
+		</exec>
+		
+		<!-- Pull the source with the label -->
+		<exec program="${VSS.cmd}">
+			<arg line="GET ${VSS.base}/${source.dir} -Y${VSS.user} -VL${version} -R -I-Y -W -GF -O-" />	
+		</exec>
+		
+		<!-- Get the release notes -->
+		<exec program="${VSS.cmd}">
+			<arg line="GET ${VSS.base}/${Release.Notes} -Y${VSS.user} -VL${version} -R -I-Y -W -GF -O-" />	
+		</exec>
+	</target>
+
+	<target name="Clean" description="Delete Build Artifacts">
+		<!-- Remove build artifacts -->
+		<delete dir="${build.dir}" if="${directory::exists(property::get-value('build.dir'))}" />
+		<mkdir  dir="${build.dir}" />
+		
+		<!-- Initialize build directory off of current directory -->
+		<exec program="${VSS.cmd}">
+			<arg line="Workfold ${VSS.base}/${build.dir} ${directory::get-current-directory()}\${build.dir} -Y${VSS.user} -I-Y -O-" />	
+		</exec>
+		
+		<!-- Pull the build contents with the label -->
+		<exec program="${VSS.cmd}">
+			<arg line="GET ${VSS.base}/${build.dir} -Y${VSS.user} -VL${version} -R -I-Y -W -GF -O-" />	
+		</exec>
+	</target>
+	
+	<target name="Increment Version" description="Updates version file and labels VSS">
+		<!-- Check out version file -->
+		<exec program="${VSS.cmd}">
+			<arg line="Checkout ${VSS.base}/${version.dir}/${version.file} -Y${VSS.user} -I- -O- " />
+		</exec>
+		<!-- Increment build number -->
+		<exec program=".\tools\IncVer\IncVer.exe">
+			<arg line="${version.file} -b" />
+		</exec>
+		<!-- Check in version file -->
+		<exec program="${VSS.cmd}">
+			<arg line="Checkin ${VSS.base}/${version.dir}/${version.file} -Y${VSS.user} -I- -O- " />
+		</exec>
+		<!-- Label VSS with build number -->
+		<readregistry property="version" key="SOFTWARE\Intel\EIVCD\Version" hive="CurrentUser" />
+		<exec program="${VSS.cmd}">
+			<arg line="Label ${VSS.base} -Y${VSS.user} -L${version} -I-Y -O- " />
+		</exec>
+	</target>
+	
+	<target name="Zip" description="Zips build results">
+		<zip zipfile="${build.zip}">
+			<fileset basedir="${build.dir}">
+				<!-- exclude name="**/*.dll" / -->
+				<!-- exclude name="**/*.exe" / -->
+				<include name="**/*" />
+			</fileset>
+		</zip>
+	</target>
+		
+</project>

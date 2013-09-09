@@ -1,0 +1,30 @@
+	<target name="Parse Version" description="Delete Automated Build artifacts">
+		<if test="${property::exists('CCNetLabel')}">
+			<property name="version" 	value="${CCNetLabel}" />
+			<echo message="Product version is ${version}" />
+			
+			<property name="major.num" 	value="${string::substring(version, 
+												0, string::index-of(version, '.'))}" />
+			
+			<property name="version"	value="${string::substring(version, 
+												string::index-of(version, '.') + 1, 
+												string::get-length(version)-string::get-length(major.num) - 1)}" />
+			
+			<property name="minor.num" 	value="${string::substring(version, 
+												0, string::index-of(version, '.'))}" />	
+												
+			<property name="version"	value="${string::substring(version, 
+												string::index-of(version, '.') + 1, 
+												string::get-length(version)-string::get-length(minor.num) - 1)}" />
+																					
+			<property name="patch.num" 	value="${string::substring(version, 
+												0, string::index-of(version, '.'))}" />	
+												
+			<property name="build.num"	value="${string::substring(version, 
+												string::index-of(version, '.') + 1, 
+												string::get-length(version)-string::get-length(patch.num) - 1)}" />
+						
+			<echo message="Product version is ${major.num}.${minor.num}.${patch.num}.${build.num} " />
+		</if>
+		
+	</target>

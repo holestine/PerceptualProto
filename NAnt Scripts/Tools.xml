@@ -1,0 +1,112 @@
+<?xml version="1.0" ?>
+<project name="IDCC" default="Error" xmlns="http://nant.sf.net/schemas/nant.xsd">
+	
+	<!-- Global variables -->
+	<property name="cmd"		value="Not Set" />
+	<property name="args"		value="Not Set" />  
+	
+	<property name="env.cmd"	value="C:\Program Files\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat" />  
+	<property name="TFS.cmd"	value="C:\Program Files\Microsoft Visual Studio 9.0\Common7\IDE\TF.exe" />
+	<property name="tfs.server"	value="http://FMSRSE02:8080" />  
+	
+	
+	<!-- SetTFSENV -->
+	<!-- ${from.dir}  : The directory in TFS   -->
+	<!-- ${to.dir}    : The local path -->
+	<target name="SetTfsEnv" description="Set TFS ENV">
+		<!-- Set up base cmd env  -->
+		<property name="cmd"	value="${env.cmd}" /> 
+		<property name="args"	value="" />
+		<call target="RunCommand" />
+		
+		<!-- Delete workspace  -->
+		<property name="cmd"	value="${TFS.cmd}" />
+		<property name="args"	value="workspace /delete IDCCWorkSpace /s:${tfs.server} /noprompt" />
+		<call target="RunCommand" />
+		
+		<!-- Create new workspace  -->
+		<property name="cmd"	value="${TFS.cmd}" />
+		<property name="args"	value="workspace /new IDCCWorkSpace /s:${tfs.server}" />
+		<call target="RunCommand" />
+		
+		<!-- set workfolder - server and client  -->
+		<property name="cmd"	value="${TFS.cmd}" />
+		<property name="args"	value="workfold ${from.dir} ${to.dir}" />
+		<call target="RunCommand" />
+	</target>
+	
+	<!-- SetWorkingFolder -->
+	<!-- ${from.dir}  : The directory in TFS   -->
+	<!-- ${to.dir}    : The local path -->
+	<target name="SetWorkingFolder" description="Set TFS ENV">
+		<!-- set workfolder - server and client  -->
+		<property name="cmd"	value="${TFS.cmd}" />
+		<property name="args"	value="workfold ${from.dir} ${to.dir}" />
+		<call target="RunCommand" />
+	</target>
+	
+	
+	<!-- checkOut -->
+	<!-- ${file}      : File in VSS to check out        -->
+	<target name="checkOut" description="Check out specified file from TFS">
+		<property name="cmd"	value="${TFS.cmd}" />
+		<property name="args"	value="checkout ${file}" />
+		<call target="RunCommand" />
+	</target>
+
+  <!-- checkIn -->
+	<!-- ${file}      : File in VSS to check in         -->
+	<target name="checkIn" description="Check specified file into VSS">
+		<property name="cmd"	value="${TFS.cmd}" />
+		<property name="args"	value="checkin ${file} /noprompt" />
+		<call target="RunCommand" />
+	</target>
+
+  <!-- GetDirectories -->
+	<!-- ${label}     : The label in Source Control to pull from -->
+	<target name="GetDirectories" description="Get files from VSS">
+		<property name="cmd"	value="${TFS.cmd}" /> 
+		<!-- get all directories and files -->
+		<property name="args"	value="get /version:L${label} /force" />
+		<call target="RunCommand" />
+	</target>
+
+  <!-- GetFile -->
+	<!-- ${file} 	  : Relative path to file in VSS -->
+	<!-- ${label}   : The label in VSS to pull from, if not specified the latest version will be pulled -->
+	<target name="GetFile" description="Get files from Source Control">		
+		<property name="cmd"	value="${TFS.cmd}" />
+		<property name="args"	value="get ${file} /force" />
+		
+		<if test="${property::exists('label')}"> 
+			<property name="args"	value="get /version:L${label} ${file} /all" />
+		</if>
+		
+		<call target="RunCommand" />
+	</target>
+
+  <!-- Label -->
+	<!-- ${path}     : File or directory in VSS to label -->
+	<!-- ${label}    : Label to apply to VSS             -->
+	<target name="Label" description="Label a file or folder in VSS">		
+		<property name="cmd"	value="${TFS.cmd}" />
+		<property name="args"	value="Label ${label} ${path} /recursive" />
+		<call target="RunCommand" />
+	</target>
+
+  <!-- RunCommand -->
+	<target name="RunCommand" description="Runs the command in {cmd} with the arguments in {args}">
+		<echo message="Command line is: ${cmd} ${args}" />
+		<exec program="${cmd}" >
+			<arg line="${args}" />
+		</exec>	
+	</target>
+
+  <!-- Error -->
+	<target name="Error" description="Default when no target is specified">
+		<echo message="No target specified" />
+	</target>
+	
+</project>
+
+

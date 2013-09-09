@@ -1,0 +1,86 @@
+<?xml version="1.0" ?>
+<project name="nant" default="test" xmlns="http://nant.sf.net/schemas/nant.xsd">
+	<property name="build.dir" value="build" />
+
+	<!-- User targets -->
+	<target name="test" depends="compile, run-unit-tests" 
+		description="Compile and Run Tests" />
+	
+	<target name="compile" description="Compiles using the Debug Configuration">
+		<setenv>
+			<!-- afxres.h -->
+			<variable name="INCLUDE" value=";%INCLUDE%"/>			
+			<!-- windows.h -->
+			<variable name="INCLUDE" value="C:\Program Files\Microsoft Visual Studio .NET 2003\Vc7\PlatformSDK\Include;%INCLUDE%"/>
+			<!-- crtdbg.h -->
+			<variable name="INCLUDE" value="C:\Program Files\Microsoft Visual Studio .NET 2003\Vc7\include"/>
+			<!-- cl.exe, rc.exe -->
+			<variable name="PATH" 	 value="C:\Program Files\Microsoft Visual Studio .NET 2003\Vc7\bin;%PATH%"/>
+			<!-- mspdb71.dll -->
+			<variable name="PATH"    value="C:\Program Files\Microsoft Visual Studio .NET 2003\Common7\IDE;%PATH%"/>
+			<!-- kernel32.lib -->
+			<variable name="LIB"     value="C:\Program Files\Microsoft Visual Studio .NET 2003\Vc7\PlatformSDK\Lib;%LIB%"/>
+			<!-- libcd.lib -->
+			<variable name="LIB"     value="C:\Program Files\Microsoft Visual Studio .NET 2003\Vc7\lib;%LIB%"/>
+		</setenv>
+		<if test="${property::exists('CCNetRequestSource')}">						
+			<echo message="Trigger name is ${CCNetRequestSource} " />
+		</if>
+		<if test="${property::exists('CCNetBuildCondition')}">						
+			<echo message="Build condition is ${CCNetBuildCondition} " />
+		</if>
+		<call target="Parse Version" />
+		<solution configuration="Debug">
+			<projects>
+				<include name="src\EXE\EXE.vcproj" />
+			</projects>
+		</solution>
+	</target>
+	
+	<target name="run-unit-tests">
+		<mkdir dir="${build.dir}\Tests" />
+		<exec program="nunit-console.exe" basedir="tools\nunit" workingdir="${build.dir}\Tests">
+			<arg value="ExpressCanyon.UnitTests.dll" />
+			<arg value="/xml:UnitTests.xml" />
+		</exec>
+		
+	</target>
+
+	<!-- Functions -->
+	<target name="Parse Version" description="Delete Automated Build artifacts">
+		<if test="${property::exists('CCNetLabel')}">
+			<property name="version" 	value="${CCNetLabel}" />
+			<echo message="Product version is ${version}" />
+			
+			<property name="major.num" 	value="${string::substring(version, 
+												0, string::index-of(version, '.'))}" />
+			
+			<property name="version"	value="${string::substring(version, 
+												string::index-of(version, '.') + 1, 
+												string::get-length(version)-string::get-length(major.num) - 1)}" />
+			
+			<property name="minor.num" 	value="${string::substring(version, 
+												0, string::index-of(version, '.'))}" />	
+												
+			<property name="version"	value="${string::substring(version, 
+												string::index-of(version, '.') + 1, 
+												string::get-length(version)-string::get-length(minor.num) - 1)}" />
+																					
+			<property name="patch.num" 	value="${string::substring(version, 
+												0, string::index-of(version, '.'))}" />	
+												
+			<property name="build.num"	value="${string::substring(version, 
+												string::index-of(version, '.') + 1, 
+												string::get-length(version)-string::get-length(patch.num) - 1)}" />
+						
+			<echo message="Product version is ${major.num}.${minor.num}.${patch.num}.${build.num} " />
+		</if>
+	</target>
+	
+	<target name="clean" description="Delete Automated Build artifacts">
+		<delete dir="${build.dir}" if="${directory::exists('${build.dir}')}"/>
+	</target>
+	
+</project>
+
+

@@ -1,0 +1,35 @@
+[OPTIONS]
+Compatibility=1.1
+Full-text search=Yes
+Contents file=index.hhc
+Default Window=main
+Default topic=index.html
+Index file=index.hhk
+Language=0x409 English (United States)
+Title=Layout Helper
+
+[WINDOWS]
+main="Layout Helper","index.hhc","index.hhk","index.html","index.html",,,,,0x23520,,0x10387e,,,,,,,,0
+
+[FILES]
+index.html
+annotated.html
+classes.html
+functions.html
+functions_func.html
+namespaces.html
+namespace_intel_1_1_finance_1_1_costing_1_1_portal_1_1_infrastructure_1_1_control___helpers.html
+class_intel_1_1_finance_1_1_costing_1_1_portal_1_1_infrastructure_1_1_control___helpers_1_1_layout_helper.html
+class_intel_1_1_finance_1_1_costing_1_1_portal_1_1_infrastructure_1_1_control___helpers_1_1_layout_helper-members.html
+graph_legend.html
+tab_a.png
+tab_b.png
+tab_h.png
+tab_s.png
+nav_h.png
+nav_f.png
+bc_s.png
+doxygen.png
+closed.png
+open.png
+graph_legend.png

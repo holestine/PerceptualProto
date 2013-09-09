@@ -1,0 +1,487 @@
+<?xml version="1.0" ?> 
+<project name="IDCC 4.4 Build Script" default="Build" xmlns="http://nant.sf.net/schemas/nant.xsd">
+	
+	<!-- Sneaky trick for getting around spaces in command line arguments -->
+	<!-- ex. value="${quote}C:\Path with spaces\${quote}"-->
+	<property name="quote" value='"' />
+	
+	<!-- Source Directories -->
+	<property name="TfsSourceDir"      				value="$/IDCC/Source/IDCC 4.4" />
+	<property name="TfsBuildDir"    				value="$/IDCC/Build" />
+	<property name="TfsToolsDir"					value="$/IDCC/Tools" />
+	
+	<!-- Version file paths and tools -->
+	<property name="UpdateVerTool" 	     			value="WriteVer.exe" />    
+
+	
+	<property name="UpdateInstallerVerTool"			value="WriteInstallerVer.exe" />
+
+	<property name="LocalVersionFile"				value="VersionInfo\VersionInfo.cs" />
+	
+	<property name="TfsInstallerVersionFile"		value="${TfsSourceDir}/Installer/Installer.vdproj" />
+	<property name="LocalInstallerVersionFile"		value="Installer\Installer.vdproj" />
+	
+	<!-- System tool paths -->
+	<property name="DevenvTool"		    			value="C:\Program Files\Microsoft Visual Studio 9.0\Common7\IDE\devenv.exe" />	
+	<property name="SignTool"		     			value="C:\Program Files\Microsoft SDKs\Windows\v6.0A\bin\signtool.exe" />
+	<property name="NUnitTool"           			value="C:\Program Files\NUnit 2.4.7\bin\nunit-console.exe" />
+	<property name="SelfExtracterTool" 				value="C:\Program Files\WinZip Self-Extractor\wzipse32.exe" />
+	
+	<!--property name="ManifestTool"             	value="C:\Program Files\Microsoft SDKs\Windows\v6.0A\bin\mt.exe" /-->
+	
+	<!-- Project Information -->
+	<property name="ProjectName"        	value="IDCC" />
+	<property name="Release.notes"	     	value="RelNotes.txt" />
+	
+	<property name="SystemInfoTestDLL"   	value=".\SystemInformationTests\bin\NUnit\SystemInfoTests.dll" />
+	
+	<property name="XTUInstallerDir"	    value="${TfsBuildDir}/External Binaries/Iron City" />
+	<property name="XTUInstaller"	        value="Intel(R) Extreme Tuning Utility.exe" />
+	
+	
+	<!-- Build --> 
+	<target name="Build" depends="StageArea" description="Build the project">
+		
+		<property name="IDCC.solution"	    	value="IDCC.sln" />
+		<property name="Installer.solution"		value="Installer.sln" />		
+	  	
+		<echo message="--------------------- Starting Debug / NUnit Build ---------------------" />
+		<echo message="Command line is: ${DevenvTool} .\${IDCC.solution} /Rebuild NUnit" />
+		<exec program="${DevenvTool}">
+			<arg value=".\${IDCC.solution}" /> 
+			<arg value="/Rebuild" /> 
+			<arg value="NUnit" />
+			<arg value="/out" />
+			<arg value="VSLog.txt" />
+		</exec>
+		
+		<echo message="--------------------- Starting Release Build ---------------------" />
+		<echo message="Command line is: ${DevenvTool} .\${IDCC.solution} /Rebuild Release" />
+		<exec program="${DevenvTool}">
+			<arg value=".\${IDCC.solution}" /> 
+			<arg value="/Rebuild" /> 
+			<arg value="Release" />
+			<arg value="/out" />
+			<arg value="VSLog.txt" />
+		</exec>
+		
+		<!-- call target="SignBinaries" / -->
+		
+		<echo message="--------------------- Creating Installer ---------------------------" />
+		<echo message="Command line is: ${DevenvTool} .\${Installer.solution} /Rebuild Release" />
+		<exec program="${DevenvTool}">
+			<arg value=".\${Installer.solution}" /> 			
+			<arg value="/Rebuild" /> 
+			<arg value="Release" />
+			<arg value="/out" />
+			<arg value="VSLog.txt" />		
+		</exec>
+		
+		<!-- call target="SignInstaller" / -->
+		
+		<call target="RunUnitTests" />
+		<call target="ArchiveBuild" />
+		<call target="PostRelease" />
+	</target>
+
+
+	<!-- StageArea -->
+	<target name="StageArea" depends="DetermineVersion" description="Prepare environment">
+
+		<nant buildfile="Tools.xml" target="SetTfsEnv">
+			<properties>
+				<property name="from.dir" 	value="${quote}${TfsSourceDir}${quote}" />
+				<property name="to.dir"     value="." />
+			</properties>
+		</nant>
+		
+		<echo message="--------------------- Removing Old Unit Test Results ---------------------" />
+		<delete file="${SystemInfoTestDLL}" /> 
+		
+		<call target="LabelProject" />
+		
+		<call target="GetSource" />		
+		
+		<call target="GetVersionUpdateUtilities" />
+			
+		<call target="UpdateVersion" />
+			  
+		<call target="UpdateInstallerVersion" />
+	</target>
+
+
+	<!-- SignBinaries -->
+	<target name="SignBinaries" description="Use certificate to sign IDCC binaries">
+		<echo message="--------------------- Signing Binaries ---------------------" />
+		<exec program="${SignTool}">
+			<arg value="sign" /> 
+			<arg value="/f" /> 
+			<arg value=".\Certificates\IDCC Code Signing Cert.pfx" />
+			<arg value="/p" />
+			<arg value="idcc24cpg!" />
+			<arg value=".\IDCC\bin\Release\Intel(R) Desktop Control Center.exe" />
+		</exec>
+	</target>
+
+	<!-- SignInstaller -->
+	<target name="SignInstaller" description="Use certificate to sign IDCC Installer">
+	<echo message="--------------------- Signing Installer ---------------------" />
+		<exec program="${SignTool}">
+			<arg value="sign" /> 
+			<arg value="/f" /> 
+			<arg value=".\Certificates\IDCC Code Signing Cert.pfx" />
+			<arg value="/p" />
+			<arg value="idcc24cpg!" />
+			<arg value=".\Installer\Release\Intel(R) Desktop Control Center.msi" />
+			<arg value=".\Installer\Release\Setup.exe" />
+		</exec>
+	</target>
+  
+	<!-- CreateSelfExtractingExe -->
+	<target name="CreateSelfExtractingExe" description="Creates a single self-extracting EXE w/ the bootstrap and MSI for the application.">
+		<echo message="--------------------- Creating Self Extracting EXE ---------------------" />
+		<exec program="${SelfExtracterTool}" verbose="true">
+			<arg value="IDCCSetup.zip"/>
+			<arg value="-y"/>
+			<arg value="-overwrite"/>
+			<!--<arg value="-setup"/>-->
+			<!--<arg value="-wait ${quote}instmsiw${quote}"/>-->
+			<arg value="-i"/>
+			<arg value=".\Installer\IDCC_48x48_32bit.ico"/>
+			<arg value="-le"/>
+			<arg value="-auto"/>
+			<arg value="-silent"/>
+			<arg value="-st"/>
+			<arg value="Intel(R) Desktop Control Center"/>
+			<arg value="-c"/>
+			<arg value=".\Setup.exe" />
+		</exec>
+	</target>
+    
+	<!-- SignSelfExtractingExe -->
+	<target name="SignSelfExtractingExe" description="Use certificate to sign the self-extracting EXE.">
+		<echo message="--------------------- Signing Self Extracting EXE ---------------------" />
+		<exec program="${SignTool}">
+			<arg value="sign" />
+			<arg value="/f" />
+			<arg value=".\Certificates\IDCC Code Signing Cert.pfx" />
+			<arg value="/p" />
+			<arg value="idcc24cpg!" />
+			<arg value="IDCCSetup.exe" />
+		</exec>
+	</target>
+  
+	<!-- DetermineVersion -->
+	<target name="DetermineVersion" description="Determine the version to build">
+		<!-- The following properties that are tested are passed in on the
+		     command line by different initiators and only one should exist -->
+		
+		<!-- Launched by CruiseControl -->
+		<if test="${property::exists('CCNetLabel')}"> 
+			<property name="version" 			value="${CCNetLabel}" />
+		</if>
+		<!-- Launched by rebuild.bat -->
+		<if test="${property::exists('RebuildVersion')}"> 
+			<property name="version" 			value="${RebuildVersion}" />
+		</if>
+		<!-- Launched by build.bat -->
+		<if test="${property::exists('BuildVersion')}"> 
+			<property name="version" 			value="${BuildVersion}" />
+		</if>
+		
+		<echo message="--------------------- Version is ${version} ---------------------" />	
+	</target>
+	
+	<!-- GetVersionUpdateUtilities -->
+	<target name="GetVersionUpdateUtilities" description="Label and Get the update utility">
+		
+		<property name="TfsUpdateVerDir"			value="${TfsToolsDir}/WriteVer/Release" />
+		<property name="TfsUpdateVerTool"			value="${TfsUpdateVerDir}/${UpdateVerTool}" />
+		
+		<property name="TfsUpdateInstallerVerDir"	value="${TfsToolsDir}/WriteInstallerVer/Release" />
+		<property name="TfsUpdateInstallerVerTool"	value="${TfsUpdateInstallerVerDir}/${UpdateInstallerVerTool}" />
+		
+
+		<!-- Set working folder for version update utility to the current directory -->
+		<nant buildfile="Tools.xml" target="SetWorkingFolder">
+			<properties>
+				<property name="from.dir"   	value="${TfsUpdateVerDir}" />
+				<property name="to.dir"  		value="." />
+			</properties>
+		</nant>
+		
+		<!-- Get the version update utility -->
+		<nant buildfile="Tools.xml" target="GetFile">
+			<properties>
+				<property name="file"    		value="${TfsUpdateVerTool}" />
+				<property name="label"   		value="${ProjectName}.${version}" />
+			</properties>
+		</nant>
+
+		<!-- Set working folder for the installer's version update utility to the current directory -->
+		<nant buildfile="Tools.xml" target="SetWorkingFolder">
+			<properties>
+				<property name="from.dir"   	value="${TfsUpdateInstallerVerDir}" />
+				<property name="to.dir"  		value="." />
+			</properties>
+		</nant>
+		
+		<!-- Get the installer's version update utility -->
+		<nant buildfile="Tools.xml" target="GetFile">
+			<properties>
+				<property name="file"    		value="${TfsUpdateInstallerVerTool}" />
+				<property name="label"   		value="${ProjectName}.${version}" />
+			</properties>
+		</nant>
+		
+  </target>
+
+
+  <!-- UpdateVersion -->  
+  <target name="UpdateVersion" description="Update the version file with the new version">
+  
+	<property name="TfsVersionFile"					value="${TfsSourceDir}/VersionInfo/VersionInfo.cs" />
+
+    <!-- Checkout the version file-->
+	<nant buildfile="Tools.xml" target="checkOut">
+			<properties>
+				<property name="file" 	  		value="${quote}${TfsVersionFile}${quote}" />
+			</properties>
+	</nant>		
+
+    <!-- Update the product version -->
+    <echo message="Command line is: ${UpdateVerTool} ${LocalVersionFile} ${version}" />
+	<exec program="${UpdateVerTool}" >			
+		<arg value="${LocalVersionFile}" />
+		<arg value="${version}" />
+	</exec>
+
+    <!-- Checkin the version file-->
+    <nant buildfile="Tools.xml" target="checkIn">
+			<properties>
+				<property name="file" 	  		value="${quote}${TfsVersionFile}${quote}" />
+			</properties>
+		</nant>
+		
+	</target>
+
+    <!-- UpdateInstallerVersion -->
+	<target name="UpdateInstallerVersion" description="Update the version file with the new version">
+		
+		<!-- Check out the version file -->
+		<nant buildfile="Tools.xml" target="checkOut">
+			<properties>
+				<property name="file" 	  		value="${quote}${TfsInstallerVersionFile}${quote}" />
+			</properties>
+		</nant>
+
+		<!-- Updating -->
+		<exec program="${UpdateInstallerVerTool}" >
+			<arg value="-msi"  />
+			<arg value="${LocalInstallerVersionFile}" />
+			<arg value="version=${version}" />
+			<arg value="drop=patch" />
+		</exec>
+
+		<!-- Check in installer version file-->
+		<nant buildfile="Tools.xml" target="checkIn">
+			<properties>
+				<property name="file" 	  		value="${quote}${TfsInstallerVersionFile}${quote}" />
+			</properties> 
+		</nant>
+	
+	</target>
+
+  <!-- LabelProject -->
+	<target name="LabelProject" description="Label project source in TFS">	
+		
+		<echo message="--------------------- Labeling Source Directory ---------------------" />	
+		<nant buildfile="Tools.xml" target="Label">
+			<properties>
+				<property name="path" 	  		value="${quote}${TfsSourceDir}${quote}" />
+				<property name="label" 			value="${ProjectName}.${version}" />
+			</properties>
+		</nant>
+		
+		<echo message="--------------------- Labeling Tools Directory ---------------------" />	
+		<nant buildfile="Tools.xml" target="Label">
+			<properties>
+				<property name="path" 	  		value="${TfsToolsDir}" />
+				<property name="label" 			value="${ProjectName}.${version}" />
+			</properties>
+		</nant>
+		
+		<echo message="--------------------- Labeling Build Directory ---------------------" />	
+		<nant buildfile="Tools.xml" target="Label">
+			<properties>
+				<property name="path" 	  	value="${TfsBuildDir}" />
+				<property name="label" 		value="${ProjectName}.${version}" />
+			</properties>
+		</nant>
+	</target>
+	
+	
+  <!-- GetSource -->
+	<target name="GetSource" description="Get source from TFS">
+    
+		<delete>
+			<fileset>
+				<exclude name="./**.xml" />
+				<exclude name="./NAnt/**" />		
+				<exclude name="./Artifacts/**" />
+				<!-- Script used for creating the self-extracting EXE -->
+				<exclude name="./SelfExtractingScript.SED"/>
+				<include name="./**" />
+			</fileset>
+		</delete>		
+
+		<nant buildfile="Tools.xml" target="GetDirectories">
+			<properties>
+				<property name="label" 			value="${ProjectName}.${version}" />
+			</properties>			
+		</nant>
+		
+		<nant buildfile="Tools.xml" target="SetWorkingFolder">
+			<properties>
+				<property name="from.dir"   	value="${TfsBuildDir}" />
+				<property name="to.dir"  		value="." />
+			</properties>
+		</nant>
+		
+		<nant buildfile="Tools.xml" target="GetFile">
+			<properties>
+				<property name="file"    		value="${TfsBuildDir}/${Release.notes}" />
+				<property name="label"   		value="${ProjectName}.${version}" />
+			</properties>
+		</nant>
+		
+		<nant buildfile="Tools.xml" target="SetWorkingFolder">
+			<properties>
+				<property name="from.dir"   	value="${quote}${XTUInstallerDir}${quote}" />
+				<property name="to.dir"  		value="." />
+			</properties>
+		</nant>
+		
+		<nant buildfile="Tools.xml" target="GetFile">
+			<properties>
+			    <property name="file"    		value="${quote}${XTUInstallerDir}/${XTUInstaller}${quote}" />
+				<property name="label"   		value="${ProjectName}.${version}" />
+			</properties>
+		</nant> 
+
+	</target>
+
+    <!-- PostRelease -->
+	<target name="PostRelease" description="Post build results based on build type">		
+		<property name="ReleaseDir"	    	value="\\bitbucket\IDCCBuilds\4.4" />
+		<property name="zip.filename"	    value="${ProjectName}.${version}.zip" />
+		<property name="Installer.dir"	  	value=".\Installer\Release\" />
+		<property name="Setup.exe"		    value="setup.exe" />
+		<property name="IDCC.msi"	        value="Intel(R) Desktop Control Center.msi" />
+		<property name="Readme.txt"	      	value="Readme.txt" />
+    	
+		<echo message="--------------------- Zip file name is ${zip.filename} ---------------------" />	
+		
+		<!-- Remove zip so a new one can be created -->
+		<delete file="${zip.filename}" /> 
+		
+		<!-- Moves files to flatten zip folder hierarchy -->
+		<move file="${Installer.dir}\${Setup.exe}"     tofile="${Setup.exe}"/>
+		<move file="${Installer.dir}\${IDCC.msi}"      tofile="${IDCC.msi}"/>
+
+		<!-- Must first zip files that are going to be included in the self-extacting EXE -->
+		<zip zipfile="IDCCSetup.zip">
+			<fileset>
+				<include name="${Setup.exe}" />
+				<include name="${IDCC.msi}" />
+			</fileset>
+		</zip>
+    
+		<!-- 
+		Create the self-extracting EXE from the zip file created in step above
+		and sign with the Intel certificate.
+		-->
+		<call target="CreateSelfExtractingExe" />
+		<call target="SignSelfExtractingExe" />
+    
+		<echo message="--------------------- Creating ${zip.filename} ---------------------" />	
+		<!-- copy file=".\${Readme.txt}"      tofile="${Readme.txt}"/ -->
+		<!-- Zip Release Build -->
+		<zip zipfile="${zip.filename}">
+			<fileset prefix="${ProjectName}.${version}">
+				<!-- Include the setup extracting EXE -->
+				<include name="IDCCSetup.exe"/>
+				<include name="${Readme.txt}" />
+			</fileset>
+		</zip>
+		
+		<echo message="--------------------- Posting Build Results to ${ReleaseDir}\${version}\ ---------------------" />	
+		<!-- Launched with Cruise Control -->
+		<if test="${property::exists('CCNetBuildCondition')}"> 
+			<move file="${zip.filename}" 	tofile="${ReleaseDir}\${version}\${zip.filename}"/>
+			<move file="${Release.notes}"	tofile="${ReleaseDir}\${version}\${Release.notes}"/>
+			<move file="${XTUInstaller}"	tofile="${ReleaseDir}\${version}\${XTUInstaller}"/>
+		</if>
+	
+		<!-- Launched with Build Script -->
+		<if test="${not property::exists('CCNetBuildCondition')}"> 
+			<!-- Launched with build.bat (Formal Build) -->
+			<if test="${property::exists('BuildVersion')}"> 
+				<move file="${zip.filename}" tofile="${ReleaseDir}\${zip.filename}"/>
+			</if>
+			<!-- Launched with rebuild.bat (Rebuild) -->
+			<if test="${property::exists('RebuildVersion')}"> 
+				<move file="${zip.filename}" tofile="${ReleaseDir}\${zip.filename}"/>
+			</if>
+		</if>
+		
+	</target>
+
+  <!-- ArchiveBuild -->
+	<target name="ArchiveBuild" description="Zip full build tree and check into source control">
+		<!-- If this is a rebuild add a suffix to the version -->
+		<if test="${property::exists('RebuildVersion')}"> 
+			<property name="version"			value="${version}.rebuild" />
+		</if>	
+		
+		<property name="ArchiveDir"			value="\\bitbucket\IDCCBuilds\Debug Builds\4.4" />
+		<property name="zip.filename"			value="${ProjectName}.${version}.zip" />
+		
+		<!-- Zip Debug Build -->
+		<zip zipfile="${zip.filename}">
+			<fileset prefix="${ProjectName}.${version}">
+				<exclude name="**/*.vssscc" />
+				<exclude name="**/*.vspscc" />
+				<exclude name="**/*.vsscc" />
+				<exclude name="**/*.scc" />
+                <exclude name="**/*.obj" />
+                <exclude name="**/*.zip" />
+                <exclude name="**/NAnt/**" />
+                <exclude name="**/Artifacts/**" />
+				<include name="**/*" />
+			</fileset>
+		</zip>
+		
+		<move file="${zip.filename}" tofile="${ArchiveDir}\${zip.filename}"/>
+		
+	</target>
+
+	<!-- RunUnitTests -->
+	<target name="RunUnitTests" description="Label project source in TFS">
+		
+		<property name="TestResultFile"         value=".\Artifacts\IDCC\4.4\buildlogs\SystemInfo.UnitTest.xml" />
+
+		<delete file="${TestResultFile}" />
+		
+		<echo message="--------------------- Running Unit Tests ---------------------" />
+		<echo message="Command line is: ${NUnitTool} ${SystemInfoTestDLL} /xml:${TestResultFile}" />
+		<exec program="${NUnitTool}" failonerror="false">
+			<arg value="${SystemInfoTestDLL}" />
+			<arg value="/xml:${TestResultFile}" />
+		</exec>
+	</target>
+  
+</project>
+
+
+		                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
