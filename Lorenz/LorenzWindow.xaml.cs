@@ -35,7 +35,7 @@ namespace Lorenz
       private State m_State;
       #endregion Private Data
 
-      #region Initializaion
+      #region Initialization
       public LorenzWindow()
       {
          InitializeComponent();
@@ -86,7 +86,7 @@ namespace Lorenz
          m_GestureEngineThread.Start();
       }
 
-      #endregion Initializaion
+      #endregion Initialization
 
       #region Public Methods
       public void Notify(string message)
