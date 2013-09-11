@@ -14,10 +14,22 @@ using namespace cv;
 #define DST "Warped Image"
 int WarpVideo()
 {
-   Point2f pts1[] = {Point2f(150,150.), Point2f(150,300.), Point2f(350,300.), Point2f(350,150.)};
-   Point2f pts2[] = {Point2f(200,200.), Point2f(150,300.), Point2f(350,300.), Point2f(300,200.)};
+   //Point2f pts1[] = {Point2f(150,150.), Point2f(150,300.), Point2f(350,300.), Point2f(350,150.)};
+   //Point2f pts2[] = {Point2f(200,200.), Point2f(150,300.), Point2f(350,300.), Point2f(300,200.)};
 
-   Mat perspective_matrix = getPerspectiveTransform(pts1, pts2);
+   float LLX = 0;
+   float LLY = 0;
+   float ULX = 0;
+   float ULY = 1000;
+   float URX = 2000;
+   float URY = 1000;
+   float LRX = 2000;
+   float LRY = 0;
+
+   Point2f pts1[] = {Point2f(LLX, LLY), Point2f(ULX, ULY), Point2f(URX, URY), Point2f(LRX, LRY)};
+   //Point2f pts2[] = {Point2f(LLX+50, LLY+50), Point2f(ULX, ULY), Point2f(URX, URY), Point2f(LRX-50, LRY+50)};
+
+   //Mat perspective_matrix = getPerspectiveTransform(pts1, pts2);
    Mat dst_img;
    Mat src_img;
 
@@ -27,8 +39,13 @@ int WarpVideo()
       return -1;
    }
 
-   for(;;)
+   for(float i = 0;;i++)
    {
+      float warp = 500*sin(i/60);
+      Point2f pts2[] = {Point2f(LLX+warp, LLY+warp), Point2f(ULX, ULY), Point2f(URX, URY), Point2f(LRX-warp, LRY-warp)};
+
+      Mat perspective_matrix = getPerspectiveTransform(pts1, pts2);
+
       cap >> src_img; // get a new frame from camera
       warpPerspective(src_img, dst_img, perspective_matrix, src_img.size(), INTER_LINEAR);
 
