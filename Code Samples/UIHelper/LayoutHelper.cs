@@ -1,10 +1,4 @@
-﻿//-----------------------------------------------------------------------
-// <copyright file="LayoutHelper.xaml.cs" company="Intel">
-//     Copyright (c) Brian Holestine, Intel. All rights reserved.
-// </copyright>
-//-----------------------------------------------------------------------
-
-namespace Intel.Finance.Costing.Portal.Infrastructure.Control_Helpers
+﻿namespace UIHelpers
 {
     #region Using Statements
 
